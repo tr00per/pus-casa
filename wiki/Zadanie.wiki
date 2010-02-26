@@ -1,0 +1,9 @@
+= Introduction =
+
+Zadanie nr 8 na zajęciach z PUS
+
+= Details =
+
+Aplikacja klient-serwer do przeglądania plików tekstowych na zdalnym hoście. Zrealizowane na 4 różne sposoby.
+
+Język: C++ (1), C# (2-4)
