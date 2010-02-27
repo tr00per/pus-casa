@@ -2,9 +2,13 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="1"
-	ProjectGUID="{D36388B4-8566-430A-94C6-228EFE95E80C}"
-	RootNamespace="My1"
+	Name="1-client"
+	ProjectGUID="{458A995E-CF36-47D2-92E5-EF7AB098017F}"
+	RootNamespace="My1client"
+	SccProjectName="Svn"
+	SccAuxPath="Svn"
+	SccLocalPath="Svn"
+	SccProvider="SubversionScc"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -172,7 +176,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\1.cpp"
+				RelativePath=".\1-client.cpp"
 				>
 			</File>
 			<File
