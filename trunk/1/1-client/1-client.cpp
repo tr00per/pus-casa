@@ -7,18 +7,40 @@
 #include <ws2tcpip.h> //newer functions and structs used to retrieve IP addresses
 #include <iostream>
 #include <string>
+#include <AtlBase.h> //parameter conversion
+#include <AtlConv.h>
 
 #define MYPORT "4000" //Diablo II port
-#define BUFFLEN 512
+#define BUFFLEN 512 //cannot exceed packet capacity
+#define IPADDRLEN 16 //abc.def.ghi.jkl
+
+void showUsageHelp() {
+	std::cout
+		<<"Program usage:\n"
+		<<"{client.exe} <host address> <query>\n\n"
+		<<"<host address>\tIPv4 address in a.b.c.d format\n"
+		<<"<query>\t\tfile to view or directory to list\n\t\tmaximum lenght is "<<BUFFLEN<<"; overlapping chars will be ignored\n\n"
+		<<std::flush;
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	//TODO read server address and user query from command line
+	if (argc < 3) {
+		showUsageHelp();
+		return 100;
+	}
 
-	char * serverAddress = "192.168.0.4";
-	char query[BUFFLEN] = "test.txt";
+	char serverAddress[IPADDRLEN];
+	char query[BUFFLEN];
+
+	//WISH check if input is correct
+	USES_CONVERSION;
+	CT2CA arg_ip(argv[1]);
+	strncpy_s(serverAddress, arg_ip, IPADDRLEN);
+	CT2CA arg_query(argv[2]);
+	strncpy_s(query, arg_query, BUFFLEN);
+
 	char response[BUFFLEN] = {0};
-
 	int error;
 
 	//*** initialize Winsock
