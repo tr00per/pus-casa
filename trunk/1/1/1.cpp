@@ -20,7 +20,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	WSADATA wsaData;
 	//2.2 is a version number. it's the latest - from 08.1997 :D
 	if ((error = WSAStartup(MAKEWORD(2,2), &wsaData)) != 0) {
-		std::cout<<"WSAStartup returned an error: "<<error<<std::endl;
+		std::cerr<<"WSAStartup returned an error: "<<error<<std::endl;
 		return 1;
 	}
 
@@ -35,7 +35,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	request.ai_flags = AI_PASSIVE; //socket will be used with bind() (1)
 
 	if ((error = getaddrinfo(NULL, MYPORT, &request, &addrInfo)) != 0) {
-		std::cout<<"gettaddrinfo returned an error: "<<error<<std::endl;
+		std::cerr<<"gettaddrinfo returned an error: "<<error<<std::endl;
 		WSACleanup();
 		return 2;
 	}
@@ -46,7 +46,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	listenSocket = socket(addrInfo->ai_family, addrInfo->ai_socktype, addrInfo->ai_protocol);
 
 	if (listenSocket == INVALID_SOCKET) {
-		std::cout<<"Creating a socket failed miserabely (error: "<<WSAGetLastError()<<')'<<std::endl;
+		std::cerr<<"Creating a socket failed miserably (error: "<<WSAGetLastError()<<')'<<std::endl;
 		freeaddrinfo(addrInfo);
 		WSACleanup();
 		return 3;
@@ -54,7 +54,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//*** bind the socket
 	if ((error = bind(listenSocket, addrInfo->ai_addr, (int)addrInfo->ai_addrlen)) != 0) {
-		std::cout<<"bind() failed: "<<WSAGetLastError()<<" :("<<std::endl;
+		std::cerr<<"bind() failed: "<<WSAGetLastError()<<" :("<<std::endl;
 		freeaddrinfo(addrInfo);
 		closesocket(listenSocket);
 		WSACleanup();
@@ -64,10 +64,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	freeaddrinfo(addrInfo);
 
 	//*** listen on the socket for a client
+	//FIXME listen in a loop
 	std::cout<<"Awaiting connection on port "<<MYPORT<<"..."<<std::endl;
 	//SOMAXCONN - maximum, reasonable number of pending connections (0x7fffffff - madness?)
 	if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-		std::cout<<"Socket error @ listen(): "<<WSAGetLastError()<<std::endl;
+		std::cerr<<"Socket error @ listen(): "<<WSAGetLastError()<<std::endl;
 		closesocket(listenSocket);
 		WSACleanup();
 		return 5;
@@ -79,18 +80,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	//accept() simpler than WSAAccept() - attempts to accept all connections,
 	//whereas WSAA...() requires a condition
 	if ((tmpSocket = accept(listenSocket, NULL, NULL)) == INVALID_SOCKET) {
-		std::cout<<"Uncool host attempted to connect; accept() failed: "<<WSAGetLastError()<<std::endl;
+		std::cerr<<"Uncool host attempted to connect; accept() failed: "<<WSAGetLastError()<<std::endl;
 		closesocket(listenSocket);
 		WSACleanup();
 		return 6;
 	}
+	//TODO info about accepted connection
 
 	//*** send and receive data
 	//TODO magic goes here :]
 
 	//*** disconnect client
 	if ((error = shutdown(tmpSocket, SD_SEND)) == SOCKET_ERROR) {
-		std::cout<<"Cannot shutdown connection!"<<std::endl;
+		std::cerr<<"Cannot shutdown connection!"<<std::endl;
 		closesocket(tmpSocket);
 		closesocket(listenSocket);
 		WSACleanup();

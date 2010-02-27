@@ -6,6 +6,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h> //newer functions and structs used to retrieve IP addresses
 #include <iostream>
+#include <string>
 
 #define MYPORT "4000" //Diablo II port
 #define BUFFLEN 512
@@ -13,6 +14,8 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	char * serverAddress = "192.168.0.1";
+	char query[BUFFLEN] = "test.txt";
+	char response[BUFFLEN] = {0};
 
 	int error;
 
@@ -20,7 +23,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	WSADATA wsaData;
 	//2.2 is a version number
 	if ((error = WSAStartup(MAKEWORD(2,2), &wsaData)) != 0) {
-		std::cout<<"WSAStartup returned an error: "<<error<<std::endl;
+		std::cerr<<"WSAStartup returned an error: "<<error<<std::endl;
 		return 1;
 	}
 
@@ -35,7 +38,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 	if ((error = getaddrinfo(serverAddress, MYPORT, &request, &addrInfo)) != 0) {
-		std::cout<<"gettaddrinfo returned an error: "<<error<<std::endl;
+		std::cerr<<"gettaddrinfo returned an error: "<<error<<std::endl;
 		WSACleanup();
 		return 2;
 	}
@@ -46,7 +49,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	connectionSocket = socket(addrInfo->ai_family, addrInfo->ai_socktype, addrInfo->ai_protocol);
 
 	if (connectionSocket == INVALID_SOCKET) {
-		std::cout<<"Creating a socket failed miserabely (error: "<<WSAGetLastError()<<')'<<std::endl;
+		std::cerr<<"Creating a socket failed miserably (error: "<<WSAGetLastError()<<')'<<std::endl;
 		freeaddrinfo(addrInfo);
 		WSACleanup();
 		return 3;
@@ -59,13 +62,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		PADDRINFOA tmpAI = addrInfo;
 		//cycle through additional addresses
 		while (tmpAI->ai_next != NULL) {
-			std::cout<<"Retrying on another interface..."<<std::endl;
+			std::cerr<<"Retrying on another interface..."<<std::endl;
 			tmpAI = tmpAI->ai_next;
 			error = connect(connectionSocket, tmpAI->ai_addr, (int)tmpAI->ai_addrlen);
 			if (error != SOCKET_ERROR) break;
 		}
 		if (error == SOCKET_ERROR) { //maybe there's no server on the other side?
-			std::cout<<"Unable to connect!"<<std::endl;
+			std::cerr<<"Unable to connect!"<<std::endl;
 			closesocket(connectionSocket);
 			freeaddrinfo(addrInfo);
 			WSACleanup();
@@ -76,11 +79,33 @@ int _tmain(int argc, _TCHAR* argv[])
 	freeaddrinfo(addrInfo);
 	
 	//*** send and receive data
-	//TODO magic goes here :]
+	std::cout<<"Sending query: "<<query<<" (please wait...)"<<std::endl;
+	int bytesTransmitted;
+	bytesTransmitted = send(connectionSocket, query, BUFFLEN, 0);
+	std::cout<<"Bytes send: "<<bytesTransmitted<<std::endl;
+	//TODO error check (SOCKET_ERROR)
+
+	shutdown(connectionSocket, SD_SEND);
+	//TODO error check (SOCKET_ERROR)
+
+	std::cout<<"Awaiting response..."<<std::endl;
+	int totalBT = 0;
+	do {
+		bytesTransmitted = recv(connectionSocket, response, BUFFLEN, 0);
+		if (bytesTransmitted > 0) {
+			std::cout<<response<<std::flush;
+			totalBT += bytesTransmitted;
+		} else if (bytesTransmitted == 0) {
+			std::cout<<"\n\nConnection closed. ";
+		} else {
+			std::cerr<<"\n\nrecv() failed: "<<WSAGetLastError()<<std::endl;
+		}
+	} while (bytesTransmitted > 0);
+	std::cout<<"Total bytes received: "<<totalBT<<std::endl;
 
 	//*** disconnect from server
 	if ((error = shutdown(connectionSocket, SD_SEND)) == SOCKET_ERROR) {
-		std::cout<<"Cannot shutdown connection!"<<std::endl;
+		std::cerr<<"Cannot shutdown connection!"<<std::endl;
 		closesocket(connectionSocket);
 		WSACleanup();
 		return 7;
