@@ -12,6 +12,8 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	char * serverRoot = "c:\\";
+
 	int error;
 
 	//*** initialize Winsock
@@ -43,7 +45,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//teh creation
 	listenSocket = socket(addrInfo->ai_family, addrInfo->ai_socktype, addrInfo->ai_protocol);
 
-	if (listenSocket = INVALID_SOCKET) {
+	if (listenSocket == INVALID_SOCKET) {
 		std::cout<<"Creating a socket failed miserabely (error: "<<WSAGetLastError()<<')'<<std::endl;
 		freeaddrinfo(addrInfo);
 		WSACleanup();
@@ -52,7 +54,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//*** bind the socket
 	if ((error = bind(listenSocket, addrInfo->ai_addr, (int)addrInfo->ai_addrlen)) != 0) {
-		std::cout<<"bin() failed: "<<WSAGetLastError()<<" :("<<std::endl;
+		std::cout<<"bind() failed: "<<WSAGetLastError()<<" :("<<std::endl;
 		freeaddrinfo(addrInfo);
 		closesocket(listenSocket);
 		WSACleanup();
@@ -100,5 +102,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	closesocket(listenSocket);
 	WSACleanup();
 
+	std::cout<<"Done."<<std::endl;
 	return 0;
 }
