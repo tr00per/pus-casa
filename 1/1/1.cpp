@@ -5,14 +5,32 @@
 #include "stdafx.h"
 #include <winsock2.h>
 #include <ws2tcpip.h> //newer functions and structs used to retrieve IP addresses
-#include <iostream>
+#include <iostream> //cout, cerr,...
+#include <fstream> //ifstream
+#include <string> //sring
+#include <sstream> //ostringstream
+#include <csignal> //stignal()
 
 #define MYPORT "4000" //Diablo II port
 #define BUFFLEN 512
 
+bool awaitClients = true;
+
+void breakLoop(int a) {
+	awaitClients = false;
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	char * serverRoot = "c:\\";
+	signal(SIGINT, breakLoop);
+
+	//TODO read root dir and port number from command line
+	char * serverRoot = "c:\\test\\";
+
+	std::cout<<"Server root: "<<serverRoot<<std::endl;
+
+	char clientQuery[BUFFLEN];
+	std::ostringstream response;
 
 	int error;
 
@@ -64,46 +82,80 @@ int _tmain(int argc, _TCHAR* argv[])
 	freeaddrinfo(addrInfo);
 
 	//*** listen on the socket for a client
-	//FIXME listen in a loop
-	std::cout<<"Awaiting connection on port "<<MYPORT<<"..."<<std::endl;
-	//SOMAXCONN - maximum, reasonable number of pending connections (0x7fffffff - madness?)
-	if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-		std::cerr<<"Socket error @ listen(): "<<WSAGetLastError()<<std::endl;
-		closesocket(listenSocket);
-		WSACleanup();
-		return 5;
-	}
+	//FIXME asynchronous loop breaking
+	while (awaitClients) {
+		std::cout<<"Awaiting connection on port "<<MYPORT<<"..."<<std::endl;
+		//SOMAXCONN - maximum, reasonable number of pending connections (0x7fffffff - madness?)
+		if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
+			std::cerr<<"Socket error @ listen(): "<<WSAGetLastError()<<std::endl;
+			continue;
+		}
 
-	//*** accept a connection from a client
-	SOCKET tmpSocket = INVALID_SOCKET;
+		//*** accept a connection from a client
+		SOCKET tmpSocket = INVALID_SOCKET;
 
-	//accept() simpler than WSAAccept() - attempts to accept all connections,
-	//whereas WSAA...() requires a condition
-	if ((tmpSocket = accept(listenSocket, NULL, NULL)) == INVALID_SOCKET) {
-		std::cerr<<"Uncool host attempted to connect; accept() failed: "<<WSAGetLastError()<<std::endl;
-		closesocket(listenSocket);
-		WSACleanup();
-		return 6;
-	}
-	//TODO info about accepted connection
+		//accept() is simpler than WSAAccept() - attempts to accept all connections,
+		//whereas WSAA...() requires a condition
+		if ((tmpSocket = accept(listenSocket, NULL, NULL)) == INVALID_SOCKET) {
+			std::cerr<<"Uncool host attempted to connect; accept() failed: "<<WSAGetLastError()<<std::endl;
+			continue;
+		}
+		//WISH info about accepted connection
 
-	//*** send and receive data
-	//TODO magic goes here :]
+		//*** send and receive data
+		int bytesR, bytesS;
+		bytesR = recv(tmpSocket, clientQuery, BUFFLEN, 0);
 
-	//*** disconnect client
-	if ((error = shutdown(tmpSocket, SD_SEND)) == SOCKET_ERROR) {
-		std::cerr<<"Cannot shutdown connection!"<<std::endl;
+		//maximum size of path to file/dir is 511, since we read the input only once
+		if (bytesR > 0) {
+			std::cout<<"Recived query: "<<clientQuery<<std::endl;
+
+			//TODO check if the path exists
+			//WISH dir listing
+			
+			response.str("");
+			response<<serverRoot<<clientQuery;
+			std::cout<<"Opening and reading "<<response.str()<<"..."<<std::endl;
+			std::ifstream fin(response.str().c_str());
+			char buf[BUFFLEN];
+			response.str("");
+			while (!fin.eof()) {
+				fin.getline(buf, BUFFLEN);
+				response<<buf;
+			}
+			fin.close();
+			std::cout<<"Sending file content..."<<std::flush;
+			bytesS = send(tmpSocket, response.str().c_str(), response.str().size(), 0);
+			if (bytesS == SOCKET_ERROR) {
+				std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
+				closesocket(tmpSocket);
+				continue;
+			}
+			std::cout<<"Done."<<std::endl;
+			
+		} else if (bytesR == SOCKET_ERROR) {
+			std::cerr<<"\n\nrecv() failed: "<<WSAGetLastError()<<std::endl;
+			closesocket(tmpSocket);
+			continue;
+		}
+
+		std::cout<<"\n\nTotal bytes received: "<<bytesR<<"; sent: "<<bytesS<<std::endl;
+
+		//*** disconnect client
+		std::cout<<"Closing client connection..."<<std::flush;
+		if ((error = shutdown(tmpSocket, SD_SEND)) == SOCKET_ERROR) {
+			std::cerr<<"\nCannot shutdown connection! Forcing close."<<std::endl;
+			closesocket(tmpSocket);
+			continue;
+		}
 		closesocket(tmpSocket);
-		closesocket(listenSocket);
-		WSACleanup();
-		return 7;
+		std::cout<<"Done."<<std::endl;
 	}
-	closesocket(tmpSocket);
 
 	//*** finalize
 	closesocket(listenSocket);
 	WSACleanup();
 
-	std::cout<<"Done."<<std::endl;
+	std::cout<<"Finished."<<std::endl;
 	return 0;
 }
