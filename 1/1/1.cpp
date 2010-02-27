@@ -5,28 +5,40 @@
 #include "stdafx.h"
 #include <winsock2.h>
 #include <ws2tcpip.h> //newer functions and structs used to retrieve IP addresses
-#include <iostream> //cout, cerr,...
-#include <fstream> //ifstream
-#include <string> //sring
-#include <sstream> //ostringstream
-#include <csignal> //stignal()
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <AtlBase.h> //parameter conversion
+#include <AtlConv.h>
 
 #define MYPORT "4000" //Diablo II port
-#define BUFFLEN 512
+#define BUFFLEN 512 //cannot exceed packet capacity
+#define ROOTDIRLEN 127 //nostalgy
 
-bool awaitClients = true;
-
-void breakLoop(int a) {
-	awaitClients = false;
+void showUsageHelp() {
+	std::cout
+		<<"Program usage:\n"
+		<<"{server.exe} <root dir>\n\n"
+		<<"<root dir>\tpath which will be used for translation of queries\n\t\tmaximum length is "<<ROOTDIRLEN<<"\n\n"
+		<<"Send \"~~kill\" to stop the server.\n\n"
+		<<std::flush;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	signal(SIGINT, breakLoop);
+	if (argc < 2) {
+		showUsageHelp();
+		return 100;
+	}
 
-	//TODO read root dir and port number from command line
-	char * serverRoot = "c:\\test\\";
+	//WISH check if input is correct
+	char serverRoot[ROOTDIRLEN];
 
+	USES_CONVERSION;
+	CT2CA arg_rootdir(argv[1]);
+	strncpy_s(serverRoot, arg_rootdir, ROOTDIRLEN);
+	
 	std::cout<<"Server root: "<<serverRoot<<std::endl;
 
 	char clientQuery[BUFFLEN];
@@ -82,8 +94,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	freeaddrinfo(addrInfo);
 
 	//*** listen on the socket for a client
-	//FIXME asynchronous loop breaking
-	while (awaitClients) {
+	bool awaitConnections = true;
+
+	while (awaitConnections) {
 		std::cout<<"Awaiting connection on port "<<MYPORT<<"..."<<std::endl;
 		//SOMAXCONN - maximum, reasonable number of pending connections (0x7fffffff - madness?)
 		if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
@@ -103,36 +116,41 @@ int _tmain(int argc, _TCHAR* argv[])
 		//WISH info about accepted connection
 
 		//*** send and receive data
-		int bytesR, bytesS;
+		int bytesR = 0, bytesS = 0;
 		bytesR = recv(tmpSocket, clientQuery, BUFFLEN, 0);
 
 		//maximum size of path to file/dir is 511, since we read the input only once
 		if (bytesR > 0) {
 			std::cout<<"Recived query: "<<clientQuery<<std::endl;
 
-			//TODO check if the path exists
-			//WISH dir listing
-			
-			response.str("");
-			response<<serverRoot<<clientQuery;
-			std::cout<<"Opening and reading "<<response.str()<<"..."<<std::endl;
-			std::ifstream fin(response.str().c_str());
-			char buf[BUFFLEN];
-			response.str("");
-			while (!fin.eof()) {
-				fin.getline(buf, BUFFLEN);
-				response<<buf;
+			if (strncmp(clientQuery, "~~kill", 6) == 0) {
+				//client sent control code
+				awaitConnections = false;
+			} else {
+				//TODO tell the user if the path is invalid and list root
+				//TODO dir listing
+
+				response.str("");
+				response<<serverRoot<<clientQuery;
+				std::cout<<"Opening and reading "<<response.str()<<std::flush;
+				std::ifstream fin(response.str().c_str(), std::ios::in | std::ios::binary);
+				char buf[BUFFLEN];
+				response.str("");
+				while (!fin.eof()) {
+					fin.read(buf, BUFFLEN);
+					response<<buf;
+					std::cout<<'.'<<std::flush;
+				}
+				fin.close();
+				std::cout<<"\nSending file content..."<<std::flush;
+				bytesS = send(tmpSocket, response.str().c_str(), response.str().size(), 0);
+				if (bytesS == SOCKET_ERROR) {
+					std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
+					closesocket(tmpSocket);
+					continue;
+				}
+				std::cout<<"Done."<<std::endl;
 			}
-			fin.close();
-			std::cout<<"Sending file content..."<<std::flush;
-			bytesS = send(tmpSocket, response.str().c_str(), response.str().size(), 0);
-			if (bytesS == SOCKET_ERROR) {
-				std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
-				closesocket(tmpSocket);
-				continue;
-			}
-			std::cout<<"Done."<<std::endl;
-			
 		} else if (bytesR == SOCKET_ERROR) {
 			std::cerr<<"\n\nrecv() failed: "<<WSAGetLastError()<<std::endl;
 			closesocket(tmpSocket);
