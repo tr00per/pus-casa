@@ -13,7 +13,9 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	char * serverAddress = "192.168.0.1";
+	//TODO read server address and user query from command line
+
+	char * serverAddress = "192.168.0.4";
 	char query[BUFFLEN] = "test.txt";
 	char response[BUFFLEN] = {0};
 
@@ -82,11 +84,21 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::cout<<"Sending query: "<<query<<" (please wait...)"<<std::endl;
 	int bytesTransmitted;
 	bytesTransmitted = send(connectionSocket, query, BUFFLEN, 0);
-	std::cout<<"Bytes send: "<<bytesTransmitted<<std::endl;
-	//TODO error check (SOCKET_ERROR)
-
-	shutdown(connectionSocket, SD_SEND);
-	//TODO error check (SOCKET_ERROR)
+	if (bytesTransmitted == SOCKET_ERROR) {
+		std::cout<<"send() failed:"<<WSAGetLastError()<<std::endl;
+		closesocket(connectionSocket);
+		WSACleanup();
+		return 9;
+	} else {
+		std::cout<<"Bytes send: "<<bytesTransmitted<<std::endl;
+	}
+	
+	if ((error = shutdown(connectionSocket, SD_SEND)) == SOCKET_ERROR) {
+		std::cerr<<"\nCannot shutdown connection!"<<std::endl;
+		closesocket(connectionSocket);
+		WSACleanup();
+		return 10;
+	}
 
 	std::cout<<"Awaiting response..."<<std::endl;
 	int totalBT = 0;
@@ -104,6 +116,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::cout<<"Total bytes received: "<<totalBT<<std::endl;
 
 	//*** disconnect from server
+	std::cout<<"Closing connection..."<<std::flush;
 	if ((error = shutdown(connectionSocket, SD_SEND)) == SOCKET_ERROR) {
 		std::cerr<<"Cannot shutdown connection!"<<std::endl;
 		closesocket(connectionSocket);
