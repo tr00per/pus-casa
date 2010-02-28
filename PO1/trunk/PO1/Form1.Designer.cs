@@ -40,6 +40,7 @@
             this.oknoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.podstawowe1 = new PO1.podstawowe();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -117,10 +118,20 @@
             // 
             this.openFileDialog1.Filter = "Image Files(*.BMP;*.JPG;*.GIF)|*.BMP;*.JPG;*.GIF";
             // 
+            // podstawowe1
+            // 
+            this.podstawowe1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.podstawowe1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.podstawowe1.Location = new System.Drawing.Point(590, 24);
+            this.podstawowe1.Name = "podstawowe1";
+            this.podstawowe1.Size = new System.Drawing.Size(200, 444);
+            this.podstawowe1.TabIndex = 0;
+            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.ClientSize = new System.Drawing.Size(790, 468);
+            this.Controls.Add(this.podstawowe1);
             this.Controls.Add(this.menuStrip1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -128,6 +139,7 @@
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Przetwarzanie Obrazów 1 - CASA";
+            this.MdiChildActivate += new System.EventHandler(this.Form1_MdiChildActivate);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -148,6 +160,7 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.ToolStripMenuItem restartToolStripMenuItem;
+        private podstawowe podstawowe1;
 
     }
 }

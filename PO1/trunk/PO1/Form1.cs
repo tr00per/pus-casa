@@ -55,9 +55,10 @@ namespace PO1
             if (this.ActiveMdiChild != null)
             {
                 ((Form2)this.ActiveMdiChild).setChanged(new Bitmap(((Form2)this.ActiveMdiChild).getOriginal()));
+                this.podstawowe1.getBitmap();
             }
         }
-
+        
         private void podstawowe1_Paint(object sender, PaintEventArgs e)
         {
 
@@ -66,6 +67,14 @@ namespace PO1
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void Form1_MdiChildActivate(object sender, EventArgs e)
+        {
+            if (this.ActiveMdiChild != null)
+            {
+                podstawowe1.getBitmap();
+            }
         }
 
 
