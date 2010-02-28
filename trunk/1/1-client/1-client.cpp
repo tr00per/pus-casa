@@ -33,7 +33,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	char serverAddress[IPADDRLEN];
 	char query[BUFFLEN];
 
-	//WISH check if input is correct
+	//WISH check if input is correct (i.e. doesn't contain "..")
 	USES_CONVERSION;
 	CT2CA arg_ip(argv[1]);
 	strncpy_s(serverAddress, arg_ip, IPADDRLEN);
@@ -112,7 +112,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		WSACleanup();
 		return 9;
 	} else {
-		std::cout<<"Bytes send: "<<bytesTransmitted<<std::endl;
+		std::cout<<"Bytes sent: "<<bytesTransmitted<<std::endl;
 	}
 	
 	if ((error = shutdown(connectionSocket, SD_SEND)) == SOCKET_ERROR) {
@@ -127,7 +127,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	do {
 		bytesTransmitted = recv(connectionSocket, response, BUFFLEN, 0);
 		if (bytesTransmitted > 0) {
-			std::cout<<response<<std::flush;
+			std::cout.write(response, bytesTransmitted);
 			totalBT += bytesTransmitted;
 		} else if (bytesTransmitted == 0) {
 			std::cout<<"\n\nConnection closed. ";

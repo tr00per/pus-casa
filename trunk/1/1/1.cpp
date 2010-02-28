@@ -11,6 +11,7 @@
 #include <sstream>
 #include <AtlBase.h> //parameter conversion
 #include <AtlConv.h>
+#include <WinBase.h>
 
 #define MYPORT "4000" //Diablo II port
 #define BUFFLEN 512 //cannot exceed packet capacity
@@ -32,9 +33,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 100;
 	}
 
-	//WISH check if input is correct
 	char serverRoot[ROOTDIRLEN];
 
+	//WISH check for trailing / in the name
+	//WISH check if the directory exists ^^
 	USES_CONVERSION;
 	CT2CA arg_rootdir(argv[1]);
 	strncpy_s(serverRoot, arg_rootdir, ROOTDIRLEN);
@@ -113,7 +115,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			std::cerr<<"Uncool host attempted to connect; accept() failed: "<<WSAGetLastError()<<std::endl;
 			continue;
 		}
-		//WISH info about accepted connection
+		//TODO info about accepted connection
 
 		//*** send and receive data
 		int bytesR = 0, bytesS = 0;
@@ -127,22 +129,55 @@ int _tmain(int argc, _TCHAR* argv[])
 				//client sent control code
 				awaitConnections = false;
 			} else {
-				//TODO tell the user if the path is invalid and list root
-				//TODO dir listing
-
 				response.str("");
 				response<<serverRoot<<clientQuery;
-				std::cout<<"Opening and reading "<<response.str()<<std::flush;
-				std::ifstream fin(response.str().c_str(), std::ios::in | std::ios::binary);
-				char buf[BUFFLEN];
+				std::string path = response.str();
+				std::cout<<"Opening and reading "<<path<<std::flush;
+				
+				DWORD fileAttr = GetFileAttributesA(path.c_str());
+
+				//WISH check for trailing / when directory is recognized
+				//TODO add trailing / to directories in listings, co they appear as "dirname/"
 				response.str("");
-				while (!fin.eof()) {
-					fin.read(buf, BUFFLEN);
-					response<<buf;
-					std::cout<<'.'<<std::flush;
+				if (fileAttr == INVALID_FILE_ATTRIBUTES) {
+					std::cout<<"\nPath is invalid! Sending root directory listing..."<<std::flush;
+					response<<"Invalid path! Root directory:\n";
+					WIN32_FIND_DATAA search;
+					path = serverRoot;
+					HANDLE h = FindFirstFileA((path+'*').c_str(), &search);
+					if (h == INVALID_HANDLE_VALUE) {
+						response<<"EMPTY!";
+					} else {
+						do {
+							response<<search.cFileName<<'\n';
+						} while (FindNextFileA(h, &search));
+						FindClose(h);
+					}
+				} else if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
+					std::cout<<"\nIt's a directory. Sending listing..."<<std::flush;
+					response<<"Listing directory:\n";
+					WIN32_FIND_DATAA search;
+					HANDLE h = FindFirstFileA((path+'*').c_str(), &search);
+					if (h == INVALID_HANDLE_VALUE) {
+						response<<"EMPTY!";
+					} else {
+						do {
+							response<<search.cFileName<<'\n';
+						} while (FindNextFileA(h, &search));
+						FindClose(h);
+					}
+				} else {
+					std::ifstream fin(path.c_str());
+					char buf[BUFFLEN];
+					while (!fin.eof()) {
+						fin.read(buf, BUFFLEN);
+						response.write(buf, fin.gcount());
+						std::cout<<'.'<<std::flush;
+					}
+					fin.close();
+					std::cout<<"\nSending file content..."<<std::flush;
 				}
-				fin.close();
-				std::cout<<"\nSending file content..."<<std::flush;
+
 				bytesS = send(tmpSocket, response.str().c_str(), response.str().size(), 0);
 				if (bytesS == SOCKET_ERROR) {
 					std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
