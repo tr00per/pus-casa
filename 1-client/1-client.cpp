@@ -57,8 +57,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	ZeroMemory(&request, sizeof(request));
 	request.ai_family = AF_INET; //IPv4 (2)
-	request.ai_socktype = SOCK_DGRAM; //socket type for UDP over IP (2) [SOCK_STREAM (1)]
-	request.ai_protocol = IPPROTO_UDP; //guess; it also requires the above pair (17) [IPPROTO_TCP (6)]
+	request.ai_socktype = SOCK_STREAM; //socket type for TCP over IP (1)
+	request.ai_protocol = IPPROTO_TCP; //guess; it also requires the above pair (6)
 
 
 	if ((error = getaddrinfo(serverAddress, MYPORT, &request, &addrInfo)) != 0) {
