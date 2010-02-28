@@ -9,27 +9,50 @@ using System.Windows.Forms;
 
 namespace PO1
 {
+
     public partial class podstawowe : UserControl
     {
         public podstawowe()
         {
             InitializeComponent();
-            lastJasnosc = 0;
-            lastKontrast = 0;
         }
 
-        private void jasnosc_Scroll(object sender, EventArgs e)
+
+
+        /// <summary>
+        /// Funkcja pobierająca obraz z aktywnego okna. 
+        /// Wywoływana jest przy zmianie aktywnego okna w programie.
+        /// </summary>
+        public void getBitmap()
         {
-            int nBrightness = this.jasnoscScroll.Value - this.lastJasnosc;
+            if (this.ParentForm.ActiveMdiChild != null)
+            {
+                bmp = ((Form2)this.ParentForm.ActiveMdiChild).getChanged();
+                this.jasnoscScroll.Value = 0;
+                this.textBox1.Text = "0";
+                this.kontrastScroll.Value = 0;
+                this.textBox2.Text = "0";
+            }
+        }
+
+        /// <summary>
+        /// Funkcja obsługi kliknięcia przycisku negatywu. Odwraca wartość bitów koloru w pliku
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void buttonNegatyw_Click(object sender, EventArgs e)
+        {
             if (this.ParentForm.ActiveMdiChild != null)
             {
                 // GDI+ return format is BGR, NOT RGB.
+                
                 System.Drawing.Imaging.BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 int stride = bmData.Stride;
                 System.IntPtr Scan0 = bmData.Scan0;
+                
                 unsafe
                 {
-                    int nVal;
                     byte* p = (byte*)(void*)Scan0;
                     int nOffset = stride - bmp.Width * 3;
                     int nWidth = bmp.Width * 3;
@@ -37,10 +60,7 @@ namespace PO1
                     {
                         for (int x = 0; x < nWidth; ++x)
                         {
-                            nVal = (int)(p[0] + nBrightness);
-                            if (nVal < 0) nVal = 0;
-                            if (nVal > 255) nVal = 255;
-                            p[0] = (byte)nVal;
+                            p[0] = (byte)(255-p[0]);
                             ++p;
                         }
                         p += nOffset;
@@ -49,15 +69,37 @@ namespace PO1
                 bmp.UnlockBits(bmData);
                 ((Form2)this.ParentForm.ActiveMdiChild).setChanged(bmp);
             }
-            this.lastJasnosc = this.jasnoscScroll.Value;
-            this.textBox1.Text = lastJasnosc.ToString();
-            
         }
 
-        private void kontrastScroll_MouseCaptureChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Funkcja aktualizująca wartość suwaka jasności w textBoxie
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void jasnoscScroll_ValueChanged(object sender, EventArgs e)
         {
-            int nContrast = (this.kontrastScroll.Value - this.lastKontrast);
-            double Contrast = (100 + (double)nContrast) / 100;
+            this.textBox1.Text = this.jasnoscScroll.Value.ToString();
+        }
+        
+        /// <summary>
+        /// Funkcja aktualizująca wartość suwaka kontrastu w textBoxie
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void kontrastScroll_ValueChanged(object sender, EventArgs e)
+        {
+            this.textBox2.Text = this.kontrastScroll.Value.ToString();
+        }
+        
+        /// <summary>
+        /// Funkcja obsługi kliknięcia na przycisk kontrastu
+        /// Modyfikuje kontrast zgodnie ze wskazaniem suwaka i zeruje suwak.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void buttonKontrast_Click(object sender, EventArgs e)
+        {
+            double Contrast = (100 + (double)this.kontrastScroll.Value) / 100;
             Contrast *= Contrast;
             if (this.ParentForm.ActiveMdiChild != null)
             {
@@ -87,27 +129,19 @@ namespace PO1
                 bmp.UnlockBits(bmData);
                 ((Form2)this.ParentForm.ActiveMdiChild).setChanged(bmp);
             }
-            this.lastKontrast = this.kontrastScroll.Value;
-            this.textBox2.Text = lastKontrast.ToString();
+            this.kontrastScroll.Value = 0;
+            this.textBox2.Text = "0";
         }
 
-
-        public void getBitmap()
+        /// <summary>
+        /// Funkcja obsługi kliknięcia na przycisk jasności
+        /// Modyfikuje kontrast zgodnie ze wskazaniem suwaka i zeruje suwak.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void buttonJasnosc_Click(object sender, EventArgs e)
         {
-            if (this.ParentForm.ActiveMdiChild != null)
-            {
-                bmp = ((Form2)this.ParentForm.ActiveMdiChild).getChanged();
-                this.lastJasnosc = 0;
-                this.lastKontrast = 0;
-                this.jasnoscScroll.Value = 0;
-                this.textBox1.Text = "0";
-                this.kontrastScroll.Value = 0;
-                this.textBox2.Text = "0";
-            }
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
+            int nBrightness = this.jasnoscScroll.Value;
             if (this.ParentForm.ActiveMdiChild != null)
             {
                 // GDI+ return format is BGR, NOT RGB.
@@ -116,6 +150,7 @@ namespace PO1
                 System.IntPtr Scan0 = bmData.Scan0;
                 unsafe
                 {
+                    int nVal;
                     byte* p = (byte*)(void*)Scan0;
                     int nOffset = stride - bmp.Width * 3;
                     int nWidth = bmp.Width * 3;
@@ -123,7 +158,10 @@ namespace PO1
                     {
                         for (int x = 0; x < nWidth; ++x)
                         {
-                            p[0] = (byte)(255-p[0]);
+                            nVal = (int)(p[0] + nBrightness);
+                            if (nVal < 0) nVal = 0;
+                            if (nVal > 255) nVal = 255;
+                            p[0] = (byte)nVal;
                             ++p;
                         }
                         p += nOffset;
@@ -132,10 +170,12 @@ namespace PO1
                 bmp.UnlockBits(bmData);
                 ((Form2)this.ParentForm.ActiveMdiChild).setChanged(bmp);
             }
+            this.jasnoscScroll.Value = 0;
+            this.textBox1.Text = "0";
         }
-
-
-
-
+    
+    
+    
+    
     }
 }

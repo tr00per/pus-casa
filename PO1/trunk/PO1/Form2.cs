@@ -17,15 +17,6 @@ namespace PO1
             this.Text=path;
             this.pictureBox1.Image = Image.FromFile(path);
             this.obrazek = new Bitmap(path);
-            Bitmap temp = new Bitmap(obrazek.Size.Height, obrazek.Size.Width);
-            for (int i = 0; i < temp.Size.Width; i++)
-            {
-                for (int j = 0; j < temp.Size.Height; j++)
-                {
-                    temp.SetPixel(i, j, obrazek.GetPixel(j, i));
-                }
-            }
-            obrazek = temp;
             this.pictureBox2.Image = obrazek;
 
         }
