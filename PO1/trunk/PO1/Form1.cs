@@ -55,25 +55,23 @@ namespace PO1
             if (this.ActiveMdiChild != null)
             {
                 ((Form2)this.ActiveMdiChild).setChanged(new Bitmap(((Form2)this.ActiveMdiChild).getOriginal()));
-                this.podstawowe1.getBitmap();
+                Reload();
             }
         }
-        
-        private void podstawowe1_Paint(object sender, PaintEventArgs e)
-        {
 
+        private void Reload()
+        {
+            this.podstawowe1.getBitmap();
+            this.geometryczne1.getBitmap();
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
 
-        }
 
         private void Form1_MdiChildActivate(object sender, EventArgs e)
         {
             if (this.ActiveMdiChild != null)
             {
-                podstawowe1.getBitmap();
+                Reload();
             }
         }
 
@@ -117,6 +115,32 @@ namespace PO1
                 }
             }
 
+        }
+
+        private void operacjePodstawoweToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DisableMenus();
+            this.podstawowe1.Enabled = true;
+            this.podstawowe1.Visible = true;
+            Reload();
+        }
+
+
+        private void DisableMenus()
+        {
+            this.podstawowe1.Enabled = false;
+            this.geometryczne1.Enabled = false;
+            this.podstawowe1.Visible = false;
+            this.geometryczne1.Visible = false;
+            
+        }
+
+        private void operacjeGeometryczneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DisableMenus();
+            this.geometryczne1.Enabled = true;
+            this.geometryczne1.Visible = true;
+            Reload();
         }
 
 

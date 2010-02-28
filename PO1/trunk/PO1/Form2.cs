@@ -38,10 +38,5 @@ namespace PO1
             this.pictureBox2.Image = obrazek;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
-
     }
 }

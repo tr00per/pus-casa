@@ -43,19 +43,20 @@ namespace PO1
         /// <param name="e"></param>
         private void buttonNegatyw_Click(object sender, EventArgs e)
         {
-            if (this.ParentForm.ActiveMdiChild != null)
+            this.getBitmap();
+             if (this.ParentForm.ActiveMdiChild != null)
             {
+               float Mnoznik = (float)(Bitmap.GetPixelFormatSize(bmp.PixelFormat))/8;
                 // GDI+ return format is BGR, NOT RGB.
-                
-                System.Drawing.Imaging.BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                System.Drawing.Imaging.BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, bmp.PixelFormat);
                 int stride = bmData.Stride;
                 System.IntPtr Scan0 = bmData.Scan0;
-                
+
                 unsafe
                 {
                     byte* p = (byte*)(void*)Scan0;
-                    int nOffset = stride - bmp.Width * 3;
-                    int nWidth = bmp.Width * 3;
+                    int nOffset = stride - (int)( bmp.Width * Mnoznik);
+                    int nWidth =(int)( bmp.Width * Mnoznik);
                     for (int y = 0; y < bmp.Height; ++y)
                     {
                         for (int x = 0; x < nWidth; ++x)
@@ -68,8 +69,10 @@ namespace PO1
                 }
                 bmp.UnlockBits(bmData);
                 ((Form2)this.ParentForm.ActiveMdiChild).setChanged(bmp);
+                
             }
         }
+
 
         /// <summary>
         /// Funkcja aktualizująca wartość suwaka jasności w textBoxie
@@ -101,18 +104,21 @@ namespace PO1
         {
             double Contrast = (100 + (double)this.kontrastScroll.Value) / 100;
             Contrast *= Contrast;
+
             if (this.ParentForm.ActiveMdiChild != null)
             {
+                float Mnoznik = (float)(Bitmap.GetPixelFormatSize(bmp.PixelFormat)) / 8;
                 // GDI+ return format is BGR, NOT RGB.
-                System.Drawing.Imaging.BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                System.Drawing.Imaging.BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, bmp.PixelFormat);
                 int stride = bmData.Stride;
                 System.IntPtr Scan0 = bmData.Scan0;
+
                 unsafe
                 {
                     int nVal;
                     byte* p = (byte*)(void*)Scan0;
-                    int nOffset = stride - bmp.Width * 3;
-                    int nWidth = bmp.Width * 3;
+                    int nOffset = stride - (int)(bmp.Width * Mnoznik);
+                    int nWidth = (int)(bmp.Width * Mnoznik);
                     for (int y = 0; y < bmp.Height; ++y)
                     {
                         for (int x = 0; x < nWidth; ++x)
@@ -144,16 +150,18 @@ namespace PO1
             int nBrightness = this.jasnoscScroll.Value;
             if (this.ParentForm.ActiveMdiChild != null)
             {
+                float Mnoznik = (float)(Bitmap.GetPixelFormatSize(bmp.PixelFormat)) / 8;
                 // GDI+ return format is BGR, NOT RGB.
-                System.Drawing.Imaging.BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                System.Drawing.Imaging.BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, bmp.PixelFormat);
                 int stride = bmData.Stride;
                 System.IntPtr Scan0 = bmData.Scan0;
+
                 unsafe
                 {
                     int nVal;
                     byte* p = (byte*)(void*)Scan0;
-                    int nOffset = stride - bmp.Width * 3;
-                    int nWidth = bmp.Width * 3;
+                    int nOffset = stride - (int)(bmp.Width * Mnoznik);
+                    int nWidth = (int)(bmp.Width * Mnoznik);
                     for (int y = 0; y < bmp.Height; ++y)
                     {
                         for (int x = 0; x < nWidth; ++x)
