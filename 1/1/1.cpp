@@ -97,29 +97,16 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//*** listen on the socket for a client
 	bool awaitConnections = true;
+	sockaddr peer;
 
 	while (awaitConnections) {
 		std::cout<<"Awaiting connection on port "<<MYPORT<<"..."<<std::endl;
-		//SOMAXCONN - maximum, reasonable number of pending connections (0x7fffffff - madness?)
-		if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-			std::cerr<<"Socket error @ listen(): "<<WSAGetLastError()<<std::endl;
-			continue;
-		}
-
-		//*** accept a connection from a client
-		SOCKET tmpSocket = INVALID_SOCKET;
-
-		//accept() is simpler than WSAAccept() - attempts to accept all connections,
-		//whereas WSAA...() requires a condition
-		if ((tmpSocket = accept(listenSocket, NULL, NULL)) == INVALID_SOCKET) {
-			std::cerr<<"Uncool host attempted to connect; accept() failed: "<<WSAGetLastError()<<std::endl;
-			continue;
-		}
 		//TODO info about accepted connection
 
 		//*** send and receive data
 		int bytesR = 0, bytesS = 0;
-		bytesR = recv(tmpSocket, clientQuery, BUFFLEN, 0);
+		int sizeOfPeer = sizeof(peer);
+		bytesR = recvfrom(listenSocket, clientQuery, BUFFLEN, 0, &peer, &sizeOfPeer);
 
 		//maximum size of path to file/dir is 511, since we read the input only once
 		if (bytesR > 0) {
@@ -177,32 +164,29 @@ int _tmain(int argc, _TCHAR* argv[])
 					fin.close();
 					std::cout<<"\nSending file content..."<<std::flush;
 				}
-
-				bytesS = send(tmpSocket, response.str().c_str(), response.str().size(), 0);
-				if (bytesS == SOCKET_ERROR) {
-					std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
-					closesocket(tmpSocket);
-					continue;
-				}
-				std::cout<<"Done."<<std::endl;
+				
+				std::string output;
+				int head = 0, tail = response.str().size();
+				do {
+					output = response.str().substr(head, BUFFLEN);
+					bytesS += sendto(listenSocket, output.c_str(), output.size(), 0, &peer, sizeOfPeer);
+					if (bytesS == SOCKET_ERROR) { //valid only for the first iteration :]
+						std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
+						continue;
+					}
+					head+=BUFFLEN;
+				} while (head < tail);
 			}
+			sendto(listenSocket, 0, 0, 0, &peer, sizeOfPeer); //finalize connection
+			std::cout<<"Done."<<std::endl;
+
 		} else if (bytesR == SOCKET_ERROR) {
 			std::cerr<<"\n\nrecv() failed: "<<WSAGetLastError()<<std::endl;
-			closesocket(tmpSocket);
-			continue;
+			closesocket(listenSocket);
+			awaitConnections = false;
 		}
 
 		std::cout<<"\n\nTotal bytes received: "<<bytesR<<"; sent: "<<bytesS<<std::endl;
-
-		//*** disconnect client
-		std::cout<<"Closing client connection..."<<std::flush;
-		if ((error = shutdown(tmpSocket, SD_SEND)) == SOCKET_ERROR) {
-			std::cerr<<"\nCannot shutdown connection! Forcing close."<<std::endl;
-			closesocket(tmpSocket);
-			continue;
-		}
-		closesocket(tmpSocket);
-		std::cout<<"Done."<<std::endl;
 	}
 
 	//*** finalize

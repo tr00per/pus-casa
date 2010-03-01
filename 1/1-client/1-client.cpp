@@ -10,7 +10,7 @@
 #include <AtlBase.h> //parameter conversion
 #include <AtlConv.h>
 
-#define MYPORT "4000" //Diablo II port
+#define MYPORT 4000 //Diablo II port
 #define BUFFLEN 512 //cannot exceed packet capacity
 #define IPADDRLEN 16 //abc.def.ghi.jkl
 
@@ -52,60 +52,31 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	//*** create a socket
-	PADDRINFOA addrInfo = NULL;
-	ADDRINFOA request;
+	sockaddr_in Server;
 
-	ZeroMemory(&request, sizeof(request));
-	request.ai_family = AF_INET; //IPv4 (2)
-	request.ai_socktype = SOCK_DGRAM; //socket type for UDP over IP (2) [SOCK_STREAM (1)]
-	request.ai_protocol = IPPROTO_UDP; //guess; it also requires the above pair (17) [IPPROTO_TCP (6)]
-
-
-	if ((error = getaddrinfo(serverAddress, MYPORT, &request, &addrInfo)) != 0) {
-		std::cerr<<"gettaddrinfo returned an error: "<<error<<std::endl;
-		WSACleanup();
-		return 2;
-	}
+	Server.sin_family = AF_INET;
+	Server.sin_port = htons(MYPORT);
+	Server.sin_addr.s_addr = inet_addr(serverAddress);
 
 	SOCKET connectionSocket = INVALID_SOCKET;
 
 	//teh creation
-	connectionSocket = socket(addrInfo->ai_family, addrInfo->ai_socktype, addrInfo->ai_protocol);
+	connectionSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	if (connectionSocket == INVALID_SOCKET) {
 		std::cerr<<"Creating a socket failed miserably (error: "<<WSAGetLastError()<<')'<<std::endl;
-		freeaddrinfo(addrInfo);
 		WSACleanup();
 		return 3;
 	}
 
 	//*** connect to server
 	std::cout<<"Connecting to "<<argv[1]<<"..."<<std::endl;
-
-	if ((error = connect(connectionSocket, addrInfo->ai_addr, (int)addrInfo->ai_addrlen)) == SOCKET_ERROR) {
-		PADDRINFOA tmpAI = addrInfo;
-		//cycle through additional addresses
-		while (tmpAI->ai_next != NULL) {
-			std::cerr<<"Retrying on another interface..."<<std::endl;
-			tmpAI = tmpAI->ai_next;
-			error = connect(connectionSocket, tmpAI->ai_addr, (int)tmpAI->ai_addrlen);
-			if (error != SOCKET_ERROR) break;
-		}
-		if (error == SOCKET_ERROR) { //maybe there's no server on the other side?
-			std::cerr<<"Unable to connect!"<<std::endl;
-			closesocket(connectionSocket);
-			freeaddrinfo(addrInfo);
-			WSACleanup();
-			return 8;
-		}
-	}
-
-	freeaddrinfo(addrInfo);
 	
 	//*** send and receive data
 	std::cout<<"Sending query: "<<query<<" (please wait...)"<<std::endl;
 	int bytesTransmitted;
-	bytesTransmitted = send(connectionSocket, query, BUFFLEN, 0);
+	int sizeOfServer = sizeof(Server);
+	bytesTransmitted = sendto(connectionSocket, query, BUFFLEN, 0, (SOCKADDR *)&Server, sizeOfServer);
 	if (bytesTransmitted == SOCKET_ERROR) {
 		std::cout<<"send() failed:"<<WSAGetLastError()<<std::endl;
 		closesocket(connectionSocket);
@@ -125,7 +96,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::cout<<"Awaiting response..."<<std::endl;
 	int totalBT = 0;
 	do {
-		bytesTransmitted = recv(connectionSocket, response, BUFFLEN, 0);
+		bytesTransmitted = recvfrom(connectionSocket, response, BUFFLEN, 0, (SOCKADDR *)&Server, &sizeOfServer);
 		if (bytesTransmitted > 0) {
 			std::cout.write(response, bytesTransmitted);
 			totalBT += bytesTransmitted;
@@ -139,12 +110,6 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//*** disconnect from server
 	std::cout<<"Closing connection..."<<std::flush;
-	if ((error = shutdown(connectionSocket, SD_SEND)) == SOCKET_ERROR) {
-		std::cerr<<"Cannot shutdown connection!"<<std::endl;
-		closesocket(connectionSocket);
-		WSACleanup();
-		return 7;
-	}
 
 	//*** finalize
 	closesocket(connectionSocket);
