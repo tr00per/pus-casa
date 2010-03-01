@@ -177,6 +177,13 @@ int _tmain(int argc, _TCHAR* argv[])
 					head+=BUFFLEN;
 				} while (head < tail);
 			}
+			//*** transmision verification
+			std::string verify = "~~~";
+			char tmpBuf[BUFFLEN];
+			_itoa_s(bytesS, tmpBuf, BUFFLEN, 10);
+			verify += tmpBuf; //hack -_-
+			sendto(listenSocket, verify.c_str(), verify.size(), 0, &peer, sizeOfPeer); //finalize connection
+
 			sendto(listenSocket, 0, 0, 0, &peer, sizeOfPeer); //finalize connection
 			std::cout<<"Done."<<std::endl;
 
