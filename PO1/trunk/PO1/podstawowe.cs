@@ -15,6 +15,7 @@ namespace PO1
         public podstawowe()
         {
             InitializeComponent();
+            bmp = new Bitmap(10, 10);
         }
 
 
@@ -25,8 +26,10 @@ namespace PO1
         /// </summary>
         public void getBitmap()
         {
+            
             if (this.ParentForm.ActiveMdiChild != null)
             {
+                //bmp.Dispose();
                 bmp = ((Form2)this.ParentForm.ActiveMdiChild).getChanged();
                 this.jasnoscScroll.Value = 0;
                 this.textBox1.Text = "0";
@@ -92,6 +95,9 @@ namespace PO1
         private void kontrastScroll_ValueChanged(object sender, EventArgs e)
         {
             this.textBox2.Text = this.kontrastScroll.Value.ToString();
+
+
+
         }
         
         /// <summary>
@@ -181,7 +187,8 @@ namespace PO1
             this.jasnoscScroll.Value = 0;
             this.textBox1.Text = "0";
         }
-    
+
+
     
     
     

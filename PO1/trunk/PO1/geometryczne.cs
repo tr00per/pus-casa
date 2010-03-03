@@ -88,7 +88,9 @@ namespace PO1
                 int nWidth = (int)(bmp.Width * poziom);
                 int nHeight = (int)(bmp.Height * pion);
 
-                Bitmap outputBitmap = new Bitmap(nWidth, nHeight);
+                if (nWidth == 0 || nHeight == 0) return;
+
+                Bitmap outputBitmap = new Bitmap(nWidth, nHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
                 Graphics g = Graphics.FromImage((Image)outputBitmap);
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;

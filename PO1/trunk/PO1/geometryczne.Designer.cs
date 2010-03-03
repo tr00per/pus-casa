@@ -82,8 +82,8 @@
             // resizeBarPoziom
             // 
             this.resizeBarPoziom.Location = new System.Drawing.Point(36, 344);
-            this.resizeBarPoziom.Maximum = 159;
-            this.resizeBarPoziom.Minimum = 50;
+            this.resizeBarPoziom.Maximum = 209;
+            this.resizeBarPoziom.Minimum = 10;
             this.resizeBarPoziom.Name = "resizeBarPoziom";
             this.resizeBarPoziom.Size = new System.Drawing.Size(161, 30);
             this.resizeBarPoziom.TabIndex = 1;
@@ -103,8 +103,8 @@
             // resizeBarPion
             // 
             this.resizeBarPion.Location = new System.Drawing.Point(3, 183);
-            this.resizeBarPion.Maximum = -41;
-            this.resizeBarPion.Minimum = -150;
+            this.resizeBarPion.Maximum = -1;
+            this.resizeBarPion.Minimum = -200;
             this.resizeBarPion.Name = "resizeBarPion";
             this.resizeBarPion.Size = new System.Drawing.Size(30, 161);
             this.resizeBarPion.TabIndex = 3;
