@@ -1,5 +1,6 @@
 // UDP.cpp : UDP client and server
 //
+//Windows Sockets error codes: http://msdn.microsoft.com/en-us/library/ms740668(VS.85).aspx
 
 #include "stdafx.h"
 #include <winsock2.h>
@@ -22,10 +23,181 @@
 SOCKET querySocket = INVALID_SOCKET;
 SOCKET dataSocket = INVALID_SOCKET;
 
-void finalize() {
+char serverAddress[IPADDRLEN];
+char clientQuery[BUFFLEN];
+char serverRoot[ROOTDIRLEN];
+char transBuffer[BUFFLEN];
+
+struct ClientRequest {
+	sockaddr * address;
+	int addressSize;
+	char query[BUFFLEN];
+
+	ClientRequest(sockaddr_in& addr, int size, const char * q, int qLen);
+	~ClientRequest();
+};
+
+void showUsageHelp();
+void listDirectory(std::string& path, std::ostringstream& response);
+void gatherOuputData(std::ostringstream& response);
+void runServer();
+void runClient();
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	enum {CLIENT, SERVER} state = CLIENT;
+
+	USES_CONVERSION;
+
+	if (argc == 2) {
+		//WISH check for trailing / in the name
+		//WISH check if the directory exists ^^
+		CT2CA arg_rootdir(argv[1]);
+		strncpy_s(serverRoot, arg_rootdir, ROOTDIRLEN-1);
+		serverRoot[ROOTDIRLEN-1] = '\0';
+	
+		state = SERVER;
+		std::cout<<"Server root: "<<serverRoot<<std::endl;
+	} else if (argc == 3) {
+		//WISH check if input is correct (i.e. doesn't contain "..")
+		CT2CA arg_ip(argv[1]);
+		strncpy_s(serverAddress, arg_ip, IPADDRLEN-1);
+		serverAddress[IPADDRLEN-1] = '\0';
+
+		CT2CA arg_query(argv[2]);
+		strncpy_s(clientQuery, arg_query, BUFFLEN-1);
+		clientQuery[BUFFLEN-1] = '\0';
+
+		//state already set to CLIENT
+		std::cout<<"Server address: "<<serverAddress<<"\nClient query: "<<clientQuery<<std::endl;
+	} else {
+		showUsageHelp();
+		return 1;
+	}
+
+	//**** inicjalizuj Winsock
+	int error;
+	WSADATA wsaData;
+	//wersja 2.2; prosto z sierpnia 1997 roku ;P
+	if ((error = WSAStartup(MAKEWORD(2,2), &wsaData)) != 0) {
+		std::cerr<<"WSAStartup returned an error: "<<error<<std::endl;
+		return 2;
+	}
+
+	//**** otwórz oba sockety
+	querySocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (querySocket == INVALID_SOCKET) {
+		std::cerr<<"Error while creating query socket: "<<WSAGetLastError()<<std::endl;
+		WSACleanup();
+		return 3;
+	}
+
+	dataSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (dataSocket == INVALID_SOCKET) {
+		std::cerr<<"Error while creating query socket: "<<WSAGetLastError()<<std::endl;
+		closesocket(querySocket);
+		WSACleanup();
+		return 3;
+	}
+
+	//**** wymuszenie obliczania sum kontrolnych
+	//dostêpne do WinXP
+	//bool optVal = true;
+	//int optLen = sizeof(bool);
+	//setsockopt(querySocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
+	//setsockopt(dataSocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
+
+	if (state == SERVER) {
+		runServer();
+	} else if (state == CLIENT) {
+		runClient();
+	}
+
+	//**** zakoñcz pracê z Winsock
 	closesocket(querySocket);
 	closesocket(dataSocket);
 	WSACleanup();
+
+	std::cout<<"Koniec."<<std::endl;
+	return 0;
+}
+
+void runServer() {
+	//**** przygotuj kolejkê dla klientów
+	std::list<ClientRequest *> queue;
+	typedef std::list<ClientRequest *>::iterator queueIter;
+
+	sockaddr_in peer;
+	int peerSize = sizeof(peer);
+	//## recv query @ queueSocket
+	int trans = recvfrom(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&peer, &peerSize);
+
+	//## add to client queue
+	peer.sin_port = htons(DATAPORT); //zmieñ na port odbioru danych
+	ClientRequest * cr = new ClientRequest(peer, peerSize, clientQuery, trans);
+
+	//## handle first of queued clients
+	//## send data @ dataSocket
+	//## recv ack @ dataSocket
+
+	//finalize
+	if (queue.size() > 0) {
+		for (queueIter iter = queue.begin(); iter != queue.end(); ++iter) {
+			strncpy_s(clientQuery, "SHD", 4); //SDH - SHutDown
+			sendto(dataSocket, clientQuery, 4, 0, (*iter)->address, (*iter)->addressSize);
+			delete *iter;
+		}
+	}
+}
+
+void runClient() {
+	sockaddr_in srv;
+	int srvSize = sizeof(srv);
+	srv.sin_family = AF_INET;
+	srv.sin_addr.s_addr = inet_addr(serverAddress);
+	srv.sin_port = htons(QUERYPORT);
+
+	//## send query @ queueSocket
+	int trans = sendto(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&srv, srvSize);
+	if (trans == SOCKET_ERROR) {
+		std::cerr<<"sendto(QUERY) failed:"<<WSAGetLastError()<<std::endl;
+		return;
+	} else {
+		std::cout<<"Bytes sent: "<<trans<<std::endl;
+	}
+	
+	//zmieñ port zapytania na port danych
+	srv.sin_port = htons(DATAPORT);
+
+	std::cout<<"\n\n";
+	int totalTrans = 0;
+	do {
+		//## recv data @ dataSocket
+		trans = recvfrom(dataSocket, transBuffer, BUFFLEN, 0, (sockaddr *)&srv, &srvSize);
+		if (trans == SOCKET_ERROR) {
+			std::cerr<<"recvfrom() failed! Error code: "<<WSAGetLastError()<<std::endl;
+			return;
+		}
+		
+		std::cout.write(transBuffer, trans);
+
+		if (trans != 4 || strncmp("SHD", transBuffer, 3) != 0) {
+			totalTrans += trans;
+
+			//## send ack @ dataSocket
+			strncpy_s(clientQuery, "ACK", 4); //¿eby ³adnie zakoñczy³ stringa '\0'
+			trans = sendto(dataSocket, clientQuery, 4, 0, (sockaddr *)&srv, srvSize);
+			if (trans == SOCKET_ERROR) {
+				std::cerr<<"sendto(ACK) failed! Error code: "<<WSAGetLastError()<<std::endl;
+				return;
+			}
+		}
+
+		if (trans < BUFFLEN) {
+			std::cout<<"\n\nTranssmision ended."<<std::endl;
+		}	
+	} while (trans == 512);
+	std::cout<<"Total bytes received: "<<totalTrans<<std::endl;
 }
 
 void showUsageHelp() {
@@ -39,11 +211,6 @@ void showUsageHelp() {
 		<<"<query>\t\tfile to view or directory to list\n\t\tmaximum lenght is "<<BUFFLEN<<"; overlapping chars will be ignored\n\n"
 		<<std::flush;
 }
-
-char serverAddress[IPADDRLEN];
-char clientQuery[BUFFLEN];
-char serverRoot[ROOTDIRLEN];
-char transBuffer[BUFFLEN];
 
 void listDirectory(std::string& path, std::ostringstream& response) {
 	//TODO add trailing / to directories in listings, co they appear as "dirname/"
@@ -93,168 +260,12 @@ void gatherOuputData(std::ostringstream& response) {
 	}
 }
 
-int _tmain(int argc, _TCHAR* argv[])
-{
-	enum {CLIENT, SERVER} state = CLIENT;
+ClientRequest::ClientRequest(sockaddr_in& addr, int size, const char * q, int qLen): addressSize(size) {
+	address = new sockaddr();
+	memcpy((void *)address, (const void *)&addr, size);//HACK find a better way
+	strncpy_s(query, q, qLen);
+}
 
-	USES_CONVERSION;
-
-	if (argc == 2) {
-		//WISH check for trailing / in the name
-		//WISH check if the directory exists ^^
-		CT2CA arg_rootdir(argv[1]);
-		strncpy_s(serverRoot, arg_rootdir, ROOTDIRLEN-1);
-		serverRoot[ROOTDIRLEN-1] = '\0';
-	
-		state = SERVER;
-		std::cout<<"Server root: "<<serverRoot<<std::endl;
-	} else if (argc == 3) {
-		//WISH check if input is correct (i.e. doesn't contain "..")
-		CT2CA arg_ip(argv[1]);
-		strncpy_s(serverAddress, arg_ip, IPADDRLEN-1);
-		serverAddress[IPADDRLEN-1] = '\0';
-
-		CT2CA arg_query(argv[2]);
-		strncpy_s(clientQuery, arg_query, BUFFLEN-1);
-		clientQuery[BUFFLEN-1] = '\0';
-
-		//state already set to CLIENT
-		std::cout<<"Server address: "<<serverAddress<<"\nClient query: "<<clientQuery<<std::endl;
-	} else {
-		showUsageHelp();
-		return 1;
-	}
-
-	int error;
-
-	//**** inicjalizuj Winsock
-	WSADATA wsaData;
-	//wersja 2.2; prosto z sierpnia 1997 roku ;P
-	if ((error = WSAStartup(MAKEWORD(2,2), &wsaData)) != 0) {
-		std::cerr<<"WSAStartup returned an error: "<<error<<std::endl;
-		return 2;
-	}
-
-	//**** otwórz oba sockety
-	querySocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (querySocket == INVALID_SOCKET) {
-		std::cerr<<"Error while creating query socket: "<<WSAGetLastError()<<std::endl;
-		WSACleanup();
-		return 3;
-	}
-
-	dataSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (dataSocket == INVALID_SOCKET) {
-		std::cerr<<"Error while creating query socket: "<<WSAGetLastError()<<std::endl;
-		closesocket(querySocket);
-		WSACleanup();
-		return 3;
-	}
-
-	//**** wymuszenie obliczania sum kontrolnych
-	//dostêpne do WinXP
-	//bool optVal = true;
-	//int optLen = sizeof(bool);
-	//setsockopt(querySocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
-	//setsockopt(dataSocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
-
-	if (state == SERVER) {////////////////////////////////////////////////////////////// SERVER ////
-		//**** przygotuj kolejkê dla klientów
-		struct ClientRequest {
-			sockaddr * address;
-			int addressSize;
-			char query[BUFFLEN];
-
-			ClientRequest(sockaddr_in& addr, int size, const char * q, int qLen): addressSize(size) {
-				address = new sockaddr();
-				memcpy((void *)address, (const void *)&addr, size);//HACK find a better way
-				strncpy_s(query, q, qLen);
-			}
-
-			~ClientRequest() {
-				delete address;
-			}
-		};
-		std::list<ClientRequest *> queue;
-		typedef std::list<ClientRequest *>::iterator queueIter;
-
-		sockaddr_in peer;
-		int peerSize = sizeof(peer);
-		//## recv query @ queueSocket
-		int trans = recvfrom(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&peer, &peerSize);
-
-		//## add to client queue
-		peer.sin_port = htons(DATAPORT); //zmieñ na port odbioru danych
-		ClientRequest * cr = new ClientRequest(peer, peerSize, clientQuery, trans);
-
-		//## handle first of queued clients
-		//## send data @ dataSocket
-		//## recv ack @ dataSocket
-
-		//finalize
-		if (queue.size() > 0) {
-			for (queueIter iter = queue.begin(); iter != queue.end(); ++iter) {
-				strncpy_s(clientQuery, "SHD", 4); //SDH - SHutDown
-				sendto(dataSocket, clientQuery, 4, 0, (*iter)->address, (*iter)->addressSize);
-				delete *iter;
-			}
-		}
-	} else if (state == CLIENT) {////////////////////////////////////////////////////////////// CLIENT ////
-		sockaddr_in srv;
-		int srvSize = sizeof(srv);
-		srv.sin_family = AF_INET;
-		srv.sin_addr.s_addr = inet_addr(serverAddress);
-		srv.sin_port = htons(QUERYPORT);
-
-		//## send query @ queueSocket
-		int trans = sendto(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&srv, srvSize);
-		if (trans == SOCKET_ERROR) {
-			std::cerr<<"sendto(QUERY) failed:"<<WSAGetLastError()<<std::endl;
-			finalize();
-			return 5;
-		} else {
-			std::cout<<"Bytes sent: "<<trans<<std::endl;
-		}
-		
-		//zmieñ port zapytania na port danych
-		srv.sin_port = htons(DATAPORT);
-
-		std::cout<<"\n\n";
-		int totalTrans = 0;
-		do {
-			//## recv data @ dataSocket
-			trans = recvfrom(dataSocket, transBuffer, BUFFLEN, 0, (sockaddr *)&srv, &srvSize);
-			if (trans == SOCKET_ERROR) {
-				std::cerr<<"recvfrom() failed! Error code: "<<WSAGetLastError()<<std::endl;
-				finalize();
-				return 5;
-			}
-			
-			std::cout.write(transBuffer, trans);
-
-			if (trans != 4 || strncmp("SHD", transBuffer, 3) != 0) {
-				totalTrans += trans;
-
-				//## send ack @ dataSocket
-				strncpy_s(clientQuery, "ACK", 4); //¿eby ³adnie zakoñczy³ stringa '\0'
-				trans = sendto(dataSocket, clientQuery, 4, 0, (sockaddr *)&srv, srvSize);
-				if (trans == SOCKET_ERROR) {
-					std::cerr<<"sendto(ACK) failed! Error code: "<<WSAGetLastError()<<std::endl;
-					finalize();
-					return 5;
-				}
-			}
-
-			if (trans < BUFFLEN) {
-				std::cout<<"\n\nTranssmision ended."<<std::endl;
-			}	
-		} while (trans == 512);
-		std::cout<<"Total bytes received: "<<totalTrans<<std::endl;
-	}
-
-	//**** zakoñcz pracê z Winsock
-	finalize();
-
-	std::cout<<"Koniec."<<std::endl;
-	return 0;
+ClientRequest::~ClientRequest() {
+	delete address;
 }
