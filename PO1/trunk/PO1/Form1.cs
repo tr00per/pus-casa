@@ -67,13 +67,17 @@ namespace PO1
             this.filtr_kontr_harmoniczny1.getBitmap();
         }
 
-
+        public void Przepisz()
+        {
+            this.miary_podobienstwa1.compute();
+        }
 
         private void Form1_MdiChildActivate(object sender, EventArgs e)
         {
             if (this.ActiveMdiChild != null)
             {
                 Reload();
+                this.miary_podobienstwa1.Activate();
             }
         }
 
@@ -163,6 +167,15 @@ namespace PO1
             this.filtr_kontr_harmoniczny1.Enabled = true;
             this.filtr_kontr_harmoniczny1.Visible = true;
             Reload();
+        }
+
+        private void analizaPodobieństwaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool c = !this.analizaPodobieństwaToolStripMenuItem.Checked;
+
+            this.miary_podobienstwa1.Enabled = c;
+            this.miary_podobienstwa1.Visible = c;
+            this.analizaPodobieństwaToolStripMenuItem.Checked = c;
         }
 
 

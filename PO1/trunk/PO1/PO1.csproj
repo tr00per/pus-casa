@@ -80,6 +80,12 @@
     <Compile Include="geometryczne.Designer.cs">
       <DependentUpon>geometryczne.cs</DependentUpon>
     </Compile>
+    <Compile Include="miary_podobienstwa.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="miary_podobienstwa.Designer.cs">
+      <DependentUpon>miary_podobienstwa.cs</DependentUpon>
+    </Compile>
     <Compile Include="podstawowe.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -102,6 +108,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="geometryczne.resx">
       <DependentUpon>geometryczne.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="miary_podobienstwa.resx">
+      <DependentUpon>miary_podobienstwa.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="podstawowe.resx">
       <DependentUpon>podstawowe.cs</DependentUpon>

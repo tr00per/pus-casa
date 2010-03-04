@@ -89,7 +89,7 @@ namespace PO1
                 source.UnlockBits(bmData);
                 temporary.UnlockBits(bmData1);
                 ((Form2)this.ParentForm.ActiveMdiChild).setChanged(temporary);
-
+                ((Form1)this.ParentForm).Przepisz();
             }
             
         }

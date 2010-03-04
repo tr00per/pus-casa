@@ -49,7 +49,7 @@
             0});
             this.szerokosc.Location = new System.Drawing.Point(143, 13);
             this.szerokosc.Maximum = new decimal(new int[] {
-            20,
+            25,
             0,
             0,
             0});
@@ -86,7 +86,7 @@
             0});
             this.wysokosc.Location = new System.Drawing.Point(143, 39);
             this.wysokosc.Maximum = new decimal(new int[] {
-            20,
+            25,
             0,
             0,
             0});

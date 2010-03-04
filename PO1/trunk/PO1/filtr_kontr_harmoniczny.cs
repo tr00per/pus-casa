@@ -85,7 +85,7 @@ namespace PO1
                 source.UnlockBits(bmData);
                 temporary.UnlockBits(bmData1);
                 ((Form2)this.ParentForm.ActiveMdiChild).setChanged(temporary);
-
+                ((Form1)this.ParentForm).Przepisz();
             }
 
         }
@@ -94,6 +94,7 @@ namespace PO1
         private void zastosujFiltr_Click(object sender, EventArgs e)
         {
             Filtruj();
+            
         }
 
         public void getBitmap()

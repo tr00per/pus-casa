@@ -43,14 +43,15 @@
             this.operacjeGeometryczneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.usuwanieSzumuToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ącyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.filtrKontrharmonicznyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.analizaPodobieństwaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.miary_podobienstwa1 = new PO1.miary_podobienstwa();
             this.filtr_kontr_harmoniczny1 = new PO1.filtr_kontr_harmoniczny();
             this.filtr_alfa_obciety1 = new PO1.filtr_alfa_obciety();
             this.geometryczne1 = new PO1.geometryczne();
             this.podstawowe1 = new PO1.podstawowe();
-            this.filtrKontrharmonicznyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,7 +64,7 @@
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.MdiWindowListItem = this.oknoToolStripMenuItem;
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(790, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(806, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -167,29 +168,50 @@
             this.ącyToolStripMenuItem.Text = "filtr alfa-odcinajacy";
             this.ącyToolStripMenuItem.Click += new System.EventHandler(this.ącyToolStripMenuItem_Click);
             // 
+            // filtrKontrharmonicznyToolStripMenuItem
+            // 
+            this.filtrKontrharmonicznyToolStripMenuItem.Name = "filtrKontrharmonicznyToolStripMenuItem";
+            this.filtrKontrharmonicznyToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.filtrKontrharmonicznyToolStripMenuItem.Text = "filtr kontr-harmoniczny";
+            this.filtrKontrharmonicznyToolStripMenuItem.Click += new System.EventHandler(this.filtrKontrharmonicznyToolStripMenuItem_Click);
+            // 
             // analizaPodobieństwaToolStripMenuItem
             // 
             this.analizaPodobieństwaToolStripMenuItem.Name = "analizaPodobieństwaToolStripMenuItem";
             this.analizaPodobieństwaToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.analizaPodobieństwaToolStripMenuItem.Text = "Analiza podobieństwa";
+            this.analizaPodobieństwaToolStripMenuItem.Click += new System.EventHandler(this.analizaPodobieństwaToolStripMenuItem_Click);
             // 
             // openFileDialog1
             // 
             this.openFileDialog1.Filter = "Image Files(*.BMP;*.JPG;*.GIF)|*.BMP;*.JPG;*.GIF";
             // 
+            // miary_podobienstwa1
+            // 
+            this.miary_podobienstwa1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.miary_podobienstwa1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.miary_podobienstwa1.Enabled = false;
+            this.miary_podobienstwa1.Location = new System.Drawing.Point(0, 379);
+            this.miary_podobienstwa1.Name = "miary_podobienstwa1";
+            this.miary_podobienstwa1.Size = new System.Drawing.Size(6, 89);
+            this.miary_podobienstwa1.TabIndex = 12;
+            this.miary_podobienstwa1.Visible = false;
+            // 
             // filtr_kontr_harmoniczny1
             // 
             this.filtr_kontr_harmoniczny1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.filtr_kontr_harmoniczny1.Location = new System.Drawing.Point(-10, 24);
+            this.filtr_kontr_harmoniczny1.Enabled = false;
+            this.filtr_kontr_harmoniczny1.Location = new System.Drawing.Point(6, 24);
             this.filtr_kontr_harmoniczny1.Name = "filtr_kontr_harmoniczny1";
             this.filtr_kontr_harmoniczny1.Size = new System.Drawing.Size(200, 444);
             this.filtr_kontr_harmoniczny1.TabIndex = 8;
+            this.filtr_kontr_harmoniczny1.Visible = false;
             // 
             // filtr_alfa_obciety1
             // 
             this.filtr_alfa_obciety1.Dock = System.Windows.Forms.DockStyle.Right;
             this.filtr_alfa_obciety1.Enabled = false;
-            this.filtr_alfa_obciety1.Location = new System.Drawing.Point(190, 24);
+            this.filtr_alfa_obciety1.Location = new System.Drawing.Point(206, 24);
             this.filtr_alfa_obciety1.Name = "filtr_alfa_obciety1";
             this.filtr_alfa_obciety1.Size = new System.Drawing.Size(200, 444);
             this.filtr_alfa_obciety1.TabIndex = 6;
@@ -199,7 +221,7 @@
             // 
             this.geometryczne1.Dock = System.Windows.Forms.DockStyle.Right;
             this.geometryczne1.Enabled = false;
-            this.geometryczne1.Location = new System.Drawing.Point(390, 24);
+            this.geometryczne1.Location = new System.Drawing.Point(406, 24);
             this.geometryczne1.Name = "geometryczne1";
             this.geometryczne1.Size = new System.Drawing.Size(200, 444);
             this.geometryczne1.TabIndex = 4;
@@ -209,23 +231,17 @@
             // 
             this.podstawowe1.Dock = System.Windows.Forms.DockStyle.Right;
             this.podstawowe1.Enabled = false;
-            this.podstawowe1.Location = new System.Drawing.Point(590, 24);
+            this.podstawowe1.Location = new System.Drawing.Point(606, 24);
             this.podstawowe1.Name = "podstawowe1";
             this.podstawowe1.Size = new System.Drawing.Size(200, 444);
             this.podstawowe1.TabIndex = 0;
             this.podstawowe1.Visible = false;
             // 
-            // filtrKontrharmonicznyToolStripMenuItem
-            // 
-            this.filtrKontrharmonicznyToolStripMenuItem.Name = "filtrKontrharmonicznyToolStripMenuItem";
-            this.filtrKontrharmonicznyToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
-            this.filtrKontrharmonicznyToolStripMenuItem.Text = "filtr kontr-harmoniczny";
-            this.filtrKontrharmonicznyToolStripMenuItem.Click += new System.EventHandler(this.filtrKontrharmonicznyToolStripMenuItem_Click);
-            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
-            this.ClientSize = new System.Drawing.Size(790, 468);
+            this.ClientSize = new System.Drawing.Size(806, 468);
+            this.Controls.Add(this.miary_podobienstwa1);
             this.Controls.Add(this.filtr_kontr_harmoniczny1);
             this.Controls.Add(this.filtr_alfa_obciety1);
             this.Controls.Add(this.geometryczne1);
@@ -269,6 +285,7 @@
         private System.Windows.Forms.ToolStripMenuItem ącyToolStripMenuItem;
         private filtr_kontr_harmoniczny filtr_kontr_harmoniczny1;
         private System.Windows.Forms.ToolStripMenuItem filtrKontrharmonicznyToolStripMenuItem;
+        private miary_podobienstwa miary_podobienstwa1;
 
     }
 }
