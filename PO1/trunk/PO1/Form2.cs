@@ -15,10 +15,10 @@ namespace PO1
         {
             InitializeComponent();
             this.Text=path;
-            this.pictureBox1.Image = Image.FromFile(path);
             this.obrazek = new Bitmap(path);
+            obrazek = obrazek.Clone(new Rectangle(0, 0, obrazek.Width, obrazek.Height), System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            this.pictureBox1.Image = new Bitmap(obrazek);
             this.pictureBox2.Image = obrazek;
-
         }
 
         public Image getOriginal()

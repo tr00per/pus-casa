@@ -35,7 +35,7 @@ namespace PO1
                 this.textBox1.Text = "0";
                 this.kontrastScroll.Value = 0;
                 this.textBox2.Text = "0";
-            }
+                }
         }
 
         /// <summary>

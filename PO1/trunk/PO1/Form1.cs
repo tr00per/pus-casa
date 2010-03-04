@@ -63,6 +63,8 @@ namespace PO1
         {
             this.podstawowe1.getBitmap();
             this.geometryczne1.getBitmap();
+            this.filtr_alfa_obciety1.getBitmap();
+            this.filtr_kontr_harmoniczny1.getBitmap();
         }
 
 
@@ -130,9 +132,12 @@ namespace PO1
         {
             this.podstawowe1.Enabled = false;
             this.geometryczne1.Enabled = false;
+            this.filtr_alfa_obciety1.Enabled = false;
+            this.filtr_kontr_harmoniczny1.Enabled = false;
             this.podstawowe1.Visible = false;
             this.geometryczne1.Visible = false;
-            
+            this.filtr_alfa_obciety1.Visible = false;
+            this.filtr_kontr_harmoniczny1.Visible = false;
         }
 
         private void operacjeGeometryczneToolStripMenuItem_Click(object sender, EventArgs e)
@@ -140,6 +145,23 @@ namespace PO1
             DisableMenus();
             this.geometryczne1.Enabled = true;
             this.geometryczne1.Visible = true;
+            Reload();
+        }
+
+
+        private void ącyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DisableMenus();
+            this.filtr_alfa_obciety1.Enabled = true;
+            this.filtr_alfa_obciety1.Visible = true;
+            Reload();
+        }
+
+        private void filtrKontrharmonicznyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DisableMenus();
+            this.filtr_kontr_harmoniczny1.Enabled = true;
+            this.filtr_kontr_harmoniczny1.Visible = true;
             Reload();
         }
 

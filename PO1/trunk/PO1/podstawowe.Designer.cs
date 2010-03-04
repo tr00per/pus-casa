@@ -56,7 +56,7 @@
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label1.Location = new System.Drawing.Point(17, 13);
+            this.label1.Location = new System.Drawing.Point(15, 13);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(65, 18);
             this.label1.TabIndex = 1;
@@ -69,7 +69,7 @@
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label2.Location = new System.Drawing.Point(17, 138);
+            this.label2.Location = new System.Drawing.Point(15, 138);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(64, 18);
             this.label2.TabIndex = 1;
@@ -153,7 +153,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.jasnoscScroll);
             this.Name = "podstawowe";
-            this.Size = new System.Drawing.Size(204, 404);
+            this.Size = new System.Drawing.Size(200, 400);
             this.ResumeLayout(false);
             this.PerformLayout();
 
