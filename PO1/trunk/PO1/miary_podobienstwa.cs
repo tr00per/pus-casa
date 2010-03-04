@@ -73,7 +73,7 @@ namespace PO1
                 //Lista (będzie to lista kolorów branych pod uwagę w liczeniu. Zerowana w każdym przebiegu 
                 List<int> listaOrg = new List<int>();
                 List<int> listaSzu = new List<int>();
-                List<int> temp = new List<int>();
+                List<double> temp = new List<double>();
 
                 float Mnoznik = (float)(Bitmap.GetPixelFormatSize(this.original.PixelFormat)) / 8;
 
@@ -110,11 +110,20 @@ namespace PO1
 
                 for (int i = 0; i < listaOrg.Count; i++)
                 {
-                    temp.Add((int)Math.Pow((double)(listaOrg[i] - listaSzu[i]), 2));
+                    temp.Add(Math.Pow((double)(listaOrg[i] - listaSzu[i]), 2));
                 }
 
+                double tempSum = 0;
+                try
+                {
 
-                double tempSum = (double)temp.Sum();
+                    tempSum = (double)temp.Sum();
+                    
+                }
+                catch (Exception e) {
+                    MessageBox.Show(e.ToString());
+                    return;
+                }
                 int count = temp.Count;
 
                 /// Mamy już wartości [f(x,y)- ^f(x, y)]^2

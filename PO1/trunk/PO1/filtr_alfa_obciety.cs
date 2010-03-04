@@ -78,6 +78,7 @@ namespace PO1
                                 lista.RemoveRange(0, dna2);
                                 t[0] = (byte)(lista.Sum()/(szerok*wysok - d));
                             }
+
                             ++s;
                             ++t;
                         }
