@@ -102,15 +102,43 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//**** wymuszenie obliczania sum kontrolnych
 	//dostêpne do WinXP
-	//bool optVal = true;
-	//int optLen = sizeof(bool);
-	//setsockopt(querySocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
-	//setsockopt(dataSocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
+	/* debug
+	bool optVal = true;
+	int optLen = sizeof(bool);
+	setsockopt(querySocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
+	setsockopt(dataSocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
+	*/
+	//**** ustalanie timeoutów dla socketów
+	/* debug
+	timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 100;
+	setsockopt(querySocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof(tv));
 
+	tv.tv_sec = 30;
+	tv.tv_usec = 0;
+	setsockopt(dataSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof(tv));
+	*/
+
+	sockaddr_in self;
+	self.sin_family = AF_INET;
+	self.sin_addr.s_addr = INADDR_ANY;
 	if (state == SERVER) {
-		runServer();
+		self.sin_port = htons(QUERYPORT);
+		int binding = bind(querySocket, (sockaddr *)&self, sizeof(self));
+		if (binding == SOCKET_ERROR) {
+			std::cerr<<"Server bind() failed! Error code: "<<WSAGetLastError()<<std::endl;
+		} else {
+			runServer();
+		}
 	} else if (state == CLIENT) {
-		runClient();
+		self.sin_port = htons(DATAPORT);
+		int binding = bind(dataSocket, (sockaddr *)&self, sizeof(self));
+		if (binding == SOCKET_ERROR) {
+			std::cerr<<"Client bind() failed! Error code: "<<WSAGetLastError()<<std::endl;
+		} else {
+			runClient();
+		}
 	}
 
 	//**** zakoñcz pracê z Winsock
@@ -118,11 +146,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	closesocket(dataSocket);
 	WSACleanup();
 
-	std::cout<<"Koniec."<<std::endl;
+	std::cout<<"Finished."<<std::endl;
 	return 0;
 }
 
 void runServer() {
+	std::cout<<"Awaiting clients..."<<std::endl;
 	//**** przygotuj kolejkê dla klientów
 	std::list<ClientRequest *> queue;
 	typedef std::list<ClientRequest *>::iterator queueIter;
@@ -131,16 +160,27 @@ void runServer() {
 	int peerSize = sizeof(peer);
 	//## recv query @ queueSocket
 	int trans = recvfrom(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&peer, &peerSize);
+	if (trans == SOCKET_ERROR) {
+		std::cerr<<"recvfrom() failed! Error code: "<<WSAGetLastError()<<std::endl;
+		return;
+	}
 
-	//## add to client queue
-	peer.sin_port = htons(DATAPORT); //zmieñ na port odbioru danych
-	ClientRequest * cr = new ClientRequest(peer, peerSize, clientQuery, trans);
+	if (trans > 0) {
+		std::cout<<"New client connected!"<<std::endl;
+		//## add to client queue
+		peer.sin_port = htons(DATAPORT); //zmieñ na port odbioru danych
+		ClientRequest * cr = new ClientRequest(peer, peerSize, clientQuery, trans);
+		queue.push_back(cr);
+	}
 
 	//## handle first of queued clients
+		
+
 	//## send data @ dataSocket
 	//## recv ack @ dataSocket
 
 	//finalize
+	std::cout<<"Exiting..."<<std::endl;
 	if (queue.size() > 0) {
 		for (queueIter iter = queue.begin(); iter != queue.end(); ++iter) {
 			strncpy_s(clientQuery, "SHD", 4); //SDH - SHutDown
