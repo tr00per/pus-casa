@@ -153,7 +153,7 @@ namespace PO1
         }
 
 
-        private void ącyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void alfa_obcinajacyącyToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DisableMenus();
             this.filtr_alfa_obciety1.Enabled = true;

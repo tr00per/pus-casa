@@ -166,7 +166,7 @@
             this.ącyToolStripMenuItem.Name = "ącyToolStripMenuItem";
             this.ącyToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
             this.ącyToolStripMenuItem.Text = "filtr alfa-odcinajacy";
-            this.ącyToolStripMenuItem.Click += new System.EventHandler(this.ącyToolStripMenuItem_Click);
+            this.ącyToolStripMenuItem.Click += new System.EventHandler(this.alfa_obcinajacyącyToolStripMenuItem_Click);
             // 
             // filtrKontrharmonicznyToolStripMenuItem
             // 
