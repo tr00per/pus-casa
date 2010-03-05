@@ -62,8 +62,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	ZeroMemory(&request, sizeof(request));
 	request.ai_family = AF_INET; //IPv4 (2)
-	request.ai_socktype = SOCK_DGRAM; //socket type for UDP over IP (2) [SOCK_STREAM (1)]
-	request.ai_protocol = IPPROTO_UDP; //guess; it also requires the above pair (17) [IPPROTO_TCP (6)]
+	request.ai_socktype = SOCK_STREAM; //socket type for TCP over IP (1)
+	request.ai_protocol = IPPROTO_TCP; //guess; it also requires the above pair (6)
 	request.ai_flags = AI_PASSIVE; //socket will be used with bind() (1)
 
 	if ((error = getaddrinfo(NULL, MYPORT, &request, &addrInfo)) != 0) {
@@ -97,16 +97,29 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//*** listen on the socket for a client
 	bool awaitConnections = true;
-	sockaddr peer;
 
 	while (awaitConnections) {
 		std::cout<<"Awaiting connection on port "<<MYPORT<<"..."<<std::endl;
+		//SOMAXCONN - maximum, reasonable number of pending connections (0x7fffffff - madness?)
+		if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
+			std::cerr<<"Socket error @ listen(): "<<WSAGetLastError()<<std::endl;
+			continue;
+		}
+
+		//*** accept a connection from a client
+		SOCKET tmpSocket = INVALID_SOCKET;
+
+		//accept() is simpler than WSAAccept() - attempts to accept all connections,
+		//whereas WSAA...() requires a condition
+		if ((tmpSocket = accept(listenSocket, NULL, NULL)) == INVALID_SOCKET) {
+			std::cerr<<"Uncool host attempted to connect; accept() failed: "<<WSAGetLastError()<<std::endl;
+			continue;
+		}
 		//TODO info about accepted connection
 
 		//*** send and receive data
 		int bytesR = 0, bytesS = 0;
-		int sizeOfPeer = sizeof(peer);
-		bytesR = recvfrom(listenSocket, clientQuery, BUFFLEN, 0, &peer, &sizeOfPeer);
+		bytesR = recv(tmpSocket, clientQuery, BUFFLEN, 0);
 
 		//maximum size of path to file/dir is 511, since we read the input only once
 		if (bytesR > 0) {
@@ -124,7 +137,6 @@ int _tmain(int argc, _TCHAR* argv[])
 				DWORD fileAttr = GetFileAttributesA(path.c_str());
 
 				//WISH check for trailing / when directory is recognized
-				//TODO add trailing / to directories in listings, co they appear as "dirname/"
 				response.str("");
 				if (fileAttr == INVALID_FILE_ATTRIBUTES) {
 					std::cout<<"\nPath is invalid! Sending root directory listing..."<<std::flush;
@@ -136,7 +148,7 @@ int _tmain(int argc, _TCHAR* argv[])
 						response<<"EMPTY!";
 					} else {
 						do {
-							response<<search.cFileName<<'\n';
+							response<<search.cFileName<<((search.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)? "/\n":"\n");
 						} while (FindNextFileA(h, &search));
 						FindClose(h);
 					}
@@ -164,36 +176,32 @@ int _tmain(int argc, _TCHAR* argv[])
 					fin.close();
 					std::cout<<"\nSending file content..."<<std::flush;
 				}
-				
-				std::string output;
-				int head = 0, tail = response.str().size();
-				do {
-					output = response.str().substr(head, BUFFLEN);
-					bytesS += sendto(listenSocket, output.c_str(), output.size(), 0, &peer, sizeOfPeer);
-					if (bytesS == SOCKET_ERROR) { //valid only for the first iteration :]
-						std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
-						continue;
-					}
-					head+=BUFFLEN;
-				} while (head < tail);
+
+				bytesS = send(tmpSocket, response.str().c_str(), response.str().size(), 0);
+				if (bytesS == SOCKET_ERROR) {
+					std::cout<<"\nsend() failed:"<<WSAGetLastError()<<std::endl;
+					closesocket(tmpSocket);
+					continue;
+				}
+				std::cout<<"Done."<<std::endl;
 			}
-			//*** transmision verification
-			std::string verify = "~~~";
-			char tmpBuf[BUFFLEN];
-			_itoa_s(bytesS, tmpBuf, BUFFLEN, 10);
-			verify += tmpBuf; //hack -_-
-			sendto(listenSocket, verify.c_str(), verify.size(), 0, &peer, sizeOfPeer); //finalize connection
-
-			sendto(listenSocket, 0, 0, 0, &peer, sizeOfPeer); //finalize connection
-			std::cout<<"Done."<<std::endl;
-
 		} else if (bytesR == SOCKET_ERROR) {
 			std::cerr<<"\n\nrecv() failed: "<<WSAGetLastError()<<std::endl;
-			closesocket(listenSocket);
-			awaitConnections = false;
+			closesocket(tmpSocket);
+			continue;
 		}
 
 		std::cout<<"\n\nTotal bytes received: "<<bytesR<<"; sent: "<<bytesS<<std::endl;
+
+		//*** disconnect client
+		std::cout<<"Closing client connection..."<<std::flush;
+		if ((error = shutdown(tmpSocket, SD_SEND)) == SOCKET_ERROR) {
+			std::cerr<<"\nCannot shutdown connection! Forcing close."<<std::endl;
+			closesocket(tmpSocket);
+			continue;
+		}
+		closesocket(tmpSocket);
+		std::cout<<"Done."<<std::endl;
 	}
 
 	//*** finalize

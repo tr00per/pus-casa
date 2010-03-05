@@ -104,14 +104,12 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//**** wymuszenie obliczania sum kontrolnych
 	//dostêpne do WinXP
-	/* debug
 	bool optVal = true;
 	int optLen = sizeof(bool);
 	setsockopt(querySocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
 	setsockopt(dataSocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
-	*/
+
 	//**** ustalanie timeoutów dla socketów
-	/* debug
 	timeval tv;
 	tv.tv_sec = 0;
 	tv.tv_usec = 100;
@@ -120,7 +118,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	tv.tv_sec = 30;
 	tv.tv_usec = 0;
 	setsockopt(dataSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof(tv));
-	*/
 
 	sockaddr_in self;
 	self.sin_family = AF_INET;
@@ -295,7 +292,6 @@ void showUsageHelp() {
 }
 
 void listDirectory(std::string& path, std::ostringstream& response) {
-	//TODO add trailing / to directories in listings, co they appear as "dirname/"
 	WIN32_FIND_DATAA search;
 	HANDLE h = FindFirstFileA((path+'*').c_str(), &search);
 	if (h == INVALID_HANDLE_VALUE) {
