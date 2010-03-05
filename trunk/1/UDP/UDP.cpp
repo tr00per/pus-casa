@@ -31,7 +31,9 @@ char transBuffer[BUFFLEN];
 struct ClientRequest {
 	sockaddr * address;
 	int addressSize;
+	char ip[IPADDRLEN];
 	char query[BUFFLEN];
+	int querySize;
 
 	ClientRequest(sockaddr_in& addr, int size, const char * q, int qLen);
 	~ClientRequest();
@@ -151,6 +153,7 @@ int _tmain(int argc, _TCHAR* argv[])
 }
 
 void runServer() {
+	bool running = true;
 	std::cout<<"Awaiting clients..."<<std::endl;
 	//**** przygotuj kolejkê dla klientów
 	std::list<ClientRequest *> queue;
@@ -158,26 +161,65 @@ void runServer() {
 
 	sockaddr_in peer;
 	int peerSize = sizeof(peer);
-	//## recv query @ queueSocket
-	int trans = recvfrom(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&peer, &peerSize);
-	if (trans == SOCKET_ERROR) {
-		std::cerr<<"recvfrom() failed! Error code: "<<WSAGetLastError()<<std::endl;
-		return;
+
+	while (running) {
+		ZeroMemory(&peer, peerSize);
+		//## recv query @ queueSocket
+		int trans = recvfrom(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&peer, &peerSize);
+		if (trans == SOCKET_ERROR) {
+			std::cerr<<"recvfrom() failed! Error code: "<<WSAGetLastError()<<std::endl;
+			return;
+		}
+
+		if (trans > 0) {
+			std::cout<<"New client connected!"<<std::endl;
+			if (strncmp(clientQuery, "~~kill", 6) == 0) {
+				running = false;
+			}
+			//## add to client queue
+			peer.sin_port = htons(DATAPORT); //zmieñ na port odbioru danych
+			ClientRequest * cr = new ClientRequest(peer, peerSize, clientQuery, trans);
+			queue.push_back(cr);
+		}
+
+		if (running && queue.size() > 0) {
+			//## handle first of queued clients
+			ClientRequest * cr = queue.front();
+			queue.pop_front();
+			strncpy_s(clientQuery, cr->query, strlen(cr->query));
+			std::ostringstream response;
+			std::cout<<"Handling client "<<cr->ip<<"..."<<std::endl;
+			std::cout<<"Query: "<<cr->query<<std::endl;
+
+			//## send data @ dataSocket
+			gatherOuputData(response);
+
+			std::string output;
+			int head = 0, tail = response.str().size();
+			int totalTrans = 0, recvAck;
+			do {
+				output = response.str().substr(head, BUFFLEN);
+				trans = sendto(dataSocket, output.c_str(), output.size(), 0, cr->address, cr->addressSize);
+				if (trans == SOCKET_ERROR) {
+					std::cerr<<"\nsendto() failed:"<<WSAGetLastError()<<std::endl;
+					break;
+				}
+				
+				//## recv ack @ dataSocket
+				recvAck = recvfrom(dataSocket, transBuffer, BUFFLEN, 0, cr->address, &(cr->addressSize));
+				if (recvAck == SOCKET_ERROR) {
+					std::cerr<<"\nrecvfrom() failed:"<<WSAGetLastError()<<std::endl;
+					break;
+				} else if (recvAck == 4 && strncmp("ACK", transBuffer, 3) == 0) {
+					head += BUFFLEN;
+					totalTrans += trans;
+				} else {
+					continue; //resend packet
+				}
+			} while (head < tail);
+			std::cout<<"Done\nAmount of data sent: "<<totalTrans<<std::endl;
+		}
 	}
-
-	if (trans > 0) {
-		std::cout<<"New client connected!"<<std::endl;
-		//## add to client queue
-		peer.sin_port = htons(DATAPORT); //zmieñ na port odbioru danych
-		ClientRequest * cr = new ClientRequest(peer, peerSize, clientQuery, trans);
-		queue.push_back(cr);
-	}
-
-	//## handle first of queued clients
-		
-
-	//## send data @ dataSocket
-	//## recv ack @ dataSocket
 
 	//finalize
 	std::cout<<"Exiting..."<<std::endl;
@@ -226,8 +268,8 @@ void runClient() {
 
 			//## send ack @ dataSocket
 			strncpy_s(clientQuery, "ACK", 4); //¿eby ³adnie zakoñczy³ stringa '\0'
-			trans = sendto(dataSocket, clientQuery, 4, 0, (sockaddr *)&srv, srvSize);
-			if (trans == SOCKET_ERROR) {
+			int sendAck = sendto(dataSocket, clientQuery, 4, 0, (sockaddr *)&srv, srvSize);
+			if (sendAck == SOCKET_ERROR) {
 				std::cerr<<"sendto(ACK) failed! Error code: "<<WSAGetLastError()<<std::endl;
 				return;
 			}
@@ -260,7 +302,7 @@ void listDirectory(std::string& path, std::ostringstream& response) {
 		response<<"EMPTY!";
 	} else {
 		do {
-			response<<search.cFileName<<'\n';
+			response<<search.cFileName<<((search.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)? "/\n":"\n");
 		} while (FindNextFileA(h, &search));
 		FindClose(h);
 	}
@@ -304,6 +346,8 @@ ClientRequest::ClientRequest(sockaddr_in& addr, int size, const char * q, int qL
 	address = new sockaddr();
 	memcpy((void *)address, (const void *)&addr, size);//HACK find a better way
 	strncpy_s(query, q, qLen);
+	strncpy_s(ip, inet_ntoa(addr.sin_addr), IPADDRLEN);
+	querySize = qLen;
 }
 
 ClientRequest::~ClientRequest() {
