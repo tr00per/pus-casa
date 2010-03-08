@@ -288,7 +288,7 @@ void runClient() {
 		if (trans < BUFFLEN) {
 			std::cout<<"\n\nTranssmision ended."<<std::endl;
 		}	
-	} while (trans == 512);
+	} while (trans == BUFFLEN);
 	std::cout<<"Total bytes received: "<<totalTrans<<std::endl;
 }
 
