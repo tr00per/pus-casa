@@ -109,16 +109,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	setsockopt(querySocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
 	setsockopt(dataSocket, IPPROTO_UDP, UDP_CHECKSUM_COVERAGE, (char*)&optVal, optLen);
 
-	//**** ustalanie timeoutów dla socketów
-	timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 100;
-	setsockopt(querySocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof(tv));
-
-	tv.tv_sec = 30;
-	tv.tv_usec = 0;
-	setsockopt(dataSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof(tv));
-
 	sockaddr_in self;
 	self.sin_family = AF_INET;
 	self.sin_addr.s_addr = INADDR_ANY;
@@ -149,6 +139,29 @@ int _tmain(int argc, _TCHAR* argv[])
 	return 0;
 }
 
+int recvfrom_to(SOCKET s, char * buf, int len, sockaddr * from, int * fromlen, long tv_sec, long tv_usec) {
+	timeval tv;
+	tv.tv_sec = tv_sec;
+	tv.tv_usec = tv_usec;
+
+	fd_set readfrom;
+	FD_ZERO(&readfrom);
+	FD_SET(s, &readfrom) ;
+
+	int t = select(0, &readfrom, 0, 0, &tv);
+	if (t == SOCKET_ERROR) {
+		return SOCKET_ERROR;
+	}
+
+	if (t > 0) {
+		if (FD_ISSET(s, &readfrom)) {
+			t = recvfrom(s, buf, len, 0, from, fromlen);
+		}
+	}
+
+	return t;
+}
+
 void runServer() {
 	bool running = true;
 	std::cout<<"Awaiting clients..."<<std::endl;
@@ -157,14 +170,14 @@ void runServer() {
 	typedef std::list<ClientRequest *>::iterator queueIter;
 
 	sockaddr_in peer;
-	int peerSize = sizeof(peer);
+	int peerSize = sizeof(sockaddr_in);
 
 	while (running) {
 		ZeroMemory(&peer, peerSize);
 		//## recv query @ queueSocket
-		int trans = recvfrom(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&peer, &peerSize);
+		int trans = recvfrom_to(querySocket, clientQuery, BUFFLEN, (sockaddr *)&peer, &peerSize, 0, 100);
 		if (trans == SOCKET_ERROR) {
-			std::cerr<<"recvfrom() failed! Error code: "<<WSAGetLastError()<<std::endl;
+			std::cerr<<"recvfrom_to() failed! Error code: "<<WSAGetLastError()<<std::endl;
 			return;
 		}
 
@@ -198,14 +211,14 @@ void runServer() {
 				output = response.str().substr(head, BUFFLEN);
 				trans = sendto(dataSocket, output.c_str(), output.size(), 0, cr->address, cr->addressSize);
 				if (trans == SOCKET_ERROR) {
-					std::cerr<<"\nsendto() failed:"<<WSAGetLastError()<<std::endl;
+					std::cerr<<"\nsendto() failed: "<<WSAGetLastError()<<std::endl;
 					break;
 				}
 				
 				//## recv ack @ dataSocket
-				recvAck = recvfrom(dataSocket, transBuffer, BUFFLEN, 0, cr->address, &(cr->addressSize));
+				recvAck = recvfrom_to(dataSocket, transBuffer, BUFFLEN, cr->address, &(cr->addressSize), 30, 0);
 				if (recvAck == SOCKET_ERROR) {
-					std::cerr<<"\nrecvfrom() failed:"<<WSAGetLastError()<<std::endl;
+					std::cerr<<"\nrecvfrom_to() failed: "<<WSAGetLastError()<<std::endl;
 					break;
 				} else if (recvAck == 4 && strncmp("ACK", transBuffer, 3) == 0) {
 					head += BUFFLEN;
@@ -231,7 +244,7 @@ void runServer() {
 
 void runClient() {
 	sockaddr_in srv;
-	int srvSize = sizeof(srv);
+	int srvSize = sizeof(sockaddr_in);
 	srv.sin_family = AF_INET;
 	srv.sin_addr.s_addr = inet_addr(serverAddress);
 	srv.sin_port = htons(QUERYPORT);
@@ -239,7 +252,7 @@ void runClient() {
 	//## send query @ queueSocket
 	int trans = sendto(querySocket, clientQuery, BUFFLEN, 0, (sockaddr *)&srv, srvSize);
 	if (trans == SOCKET_ERROR) {
-		std::cerr<<"sendto(QUERY) failed:"<<WSAGetLastError()<<std::endl;
+		std::cerr<<"sendto(QUERY) failed: "<<WSAGetLastError()<<std::endl;
 		return;
 	} else {
 		std::cout<<"Bytes sent: "<<trans<<std::endl;
