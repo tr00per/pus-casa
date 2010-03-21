@@ -173,7 +173,7 @@ namespace PUS2
 
         private void Finish(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (serverThread.IsAlive)
+            if (serverThread!= null && serverThread.IsAlive)
             {
                 serverThread.Interrupt();
             }
