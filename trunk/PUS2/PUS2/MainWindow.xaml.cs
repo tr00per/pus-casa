@@ -157,7 +157,7 @@ namespace PUS2
                 string[] dirs = Directory.GetDirectories(path);
                 foreach (string dir in dirs)
                 {
-                    ret += dir + "/\r\n";
+                    ret += dir + "\\\r\n";
                 }
                 string[] files = Directory.GetFiles(path);
                 foreach (string file in files)
@@ -220,6 +220,7 @@ namespace PUS2
                 //TODO inform pending clients that fun is over
                 serverThread.Interrupt();
             }
+            App.Current.Shutdown();
         }
     }
 }
