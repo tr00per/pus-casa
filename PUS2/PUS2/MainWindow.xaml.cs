@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -11,9 +16,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
 
 namespace PUS2
 {
@@ -23,6 +25,7 @@ namespace PUS2
         TcpListener server;
         System.Text.Encoding encoding;
         Thread serverThread;
+        string serverRoot;
 
         const Int32 queryPort = 4000;
         const int bufferSize = 512;
@@ -71,7 +74,7 @@ namespace PUS2
 
                     this.Dispatcher.Invoke(log, (object)("Got queried: " + query));
 
-                    byte[] response = GatherOutputdata(query);
+                    byte[] response = GatherOutputData(query);
 
                     stream.Write(response, 0, response.Length);
 
@@ -111,20 +114,59 @@ namespace PUS2
 
             Log("Spawning server...");
 
+            serverRoot = QueryBox.Text;
+            if (!Directory.Exists(serverRoot))
+            {
+                serverRoot = Directory.GetCurrentDirectory();
+            }
             serverThread = new Thread(new ThreadStart(runServer));
             serverThread.Start();
         }
 
-        private byte[] GatherOutputdata(string query)
+        private byte[] GatherOutputData(string query)
         {
             if (query.Equals("~~kill"))
             {
                 return encoding.GetBytes("SHD");
             }
 
-            //FIXME wstawić działanie programu (na podstawie poprzedniej wersji)
-            byte[] ret = encoding.GetBytes("ABC");
-            return ret;
+            byte[] buf = new byte[1024];
+            string ret = "";            
+            string path = serverRoot + query;
+
+
+            if (File.Exists(path))
+            {
+                FileStream fin = File.OpenRead(path);
+
+                int totalRead = 0, read;
+                do
+                {
+                    read = fin.Read(buf, totalRead, 1024);
+                    ret += encoding.GetString(buf);
+                    totalRead += read;
+                } while (read < 1024);
+            }
+            else
+            {
+                if (!Directory.Exists(path))
+                {
+                    path = serverRoot;
+                }
+
+                string[] dirs = Directory.GetDirectories(path);
+                foreach (string dir in dirs)
+                {
+                    ret += dir + "/\r\n";
+                }
+                string[] files = Directory.GetFiles(path);
+                foreach (string file in files)
+                {
+                    ret += file + "\r\n";
+                }
+            }
+
+            return encoding.GetBytes(ret);
         }
 
         private void SendQuery_Click(object sender, RoutedEventArgs e)
@@ -175,6 +217,7 @@ namespace PUS2
         {
             if (serverThread!= null && serverThread.IsAlive)
             {
+                //TODO inform pending clients that fun is over
                 serverThread.Interrupt();
             }
         }
