@@ -149,7 +149,7 @@ namespace PUS2
                 do
                 {
                     read = fin.Read(buf, 0, 1024);
-                    ret += encoding.GetString(buf);
+                    ret += encoding.GetString(buf, 0, read);
                 } while (read == 1024);
             }
             else
