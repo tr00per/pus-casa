@@ -62,8 +62,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	ZeroMemory(&request, sizeof(request));
 	request.ai_family = AF_INET; //IPv4 (2)
-	request.ai_socktype = SOCK_STREAM; //socket type for TCP over IP (1)
-	request.ai_protocol = IPPROTO_TCP; //guess; it also requires the above pair (6)
+	request.ai_socktype = SOCK_DGRAM; //socket type for UDP over IP (2) [SOCK_STREAM (1)]
+	request.ai_protocol = IPPROTO_UDP; //guess; it also requires the above pair (17) [IPPROTO_TCP (6)]
 	request.ai_flags = AI_PASSIVE; //socket will be used with bind() (1)
 
 	if ((error = getaddrinfo(NULL, MYPORT, &request, &addrInfo)) != 0) {
@@ -137,6 +137,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				DWORD fileAttr = GetFileAttributesA(path.c_str());
 
 				//WISH check for trailing / when directory is recognized
+				//TODO add trailing / to directories in listings, co they appear as "dirname/"
 				response.str("");
 				if (fileAttr == INVALID_FILE_ATTRIBUTES) {
 					std::cout<<"\nPath is invalid! Sending root directory listing..."<<std::flush;
@@ -148,7 +149,7 @@ int _tmain(int argc, _TCHAR* argv[])
 						response<<"EMPTY!";
 					} else {
 						do {
-							response<<search.cFileName<<((search.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)? "/\n":"\n");
+							response<<search.cFileName<<'\n';
 						} while (FindNextFileA(h, &search));
 						FindClose(h);
 					}
