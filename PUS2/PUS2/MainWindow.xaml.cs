@@ -90,7 +90,6 @@ namespace PUS2
                         break;
                     }
                 }
-
             }
 
             server.Stop();
@@ -119,6 +118,8 @@ namespace PUS2
             {
                 serverRoot = Directory.GetCurrentDirectory();
             }
+            Log("Root dir: " + serverRoot);
+
             serverThread = new Thread(new ThreadStart(runServer));
             serverThread.Start();
         }
