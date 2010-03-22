@@ -51,6 +51,11 @@ namespace PUS2
             server = null;
             encoding = new System.Text.ASCIIEncoding();
             log = new LogDelegate(Log);
+            IPAddress[] ipList = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+            foreach (IPAddress ip in ipList.Reverse())
+            {
+                Log(ip.ToString());
+            }
         }
 
         private void runServer()
@@ -140,13 +145,12 @@ namespace PUS2
             {
                 FileStream fin = File.OpenRead(path);
 
-                int totalRead = 0, read;
+                int read;
                 do
                 {
-                    read = fin.Read(buf, totalRead, 1024);
+                    read = fin.Read(buf, 0, 1024);
                     ret += encoding.GetString(buf);
-                    totalRead += read;
-                } while (read < 1024);
+                } while (read == 1024);
             }
             else
             {
@@ -216,12 +220,20 @@ namespace PUS2
 
         private void Finish(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (serverThread!= null && serverThread.IsAlive)
+            if (serverThread != null && serverThread.IsAlive)
             {
                 //TODO inform pending clients that fun is over
                 serverThread.Interrupt();
             }
             App.Current.Shutdown();
+        }
+
+        private void SendQueryIfEnter(object sender, KeyEventArgs e)
+        {
+            if (e.Key.Equals(Key.Enter))
+            {
+                SendQuery_Click(null, null);
+            }
         }
     }
 }
