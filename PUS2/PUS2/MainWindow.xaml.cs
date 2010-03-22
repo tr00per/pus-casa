@@ -21,13 +21,14 @@ namespace PUS2
 {
     public partial class Main : Window
     {
-        TcpClient client;
-        TcpListener server;
+        UdpClient client;
+        UdpClient server;
         System.Text.Encoding encoding;
         Thread serverThread;
         string serverRoot;
 
         const Int32 queryPort = 4000;
+        const Int32 dataPort = 23073;
         const int bufferSize = 512;
 
         delegate void LogDelegate(String msg);
@@ -55,14 +56,21 @@ namespace PUS2
 
         private void runServer()
         {
-            server = new TcpListener(IPAddress.Any, queryPort);
-            server.Start();
+            server = new UdpClient(queryPort, AddressFamily.InterNetwork);
+            
 
             byte[] buffer = new byte[bufferSize];
+            IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(RemoteHostAddress.Text), queryPort);
+            ArrayList pendingClients = new ArrayList();
 
             while (true)
             {
-                if (server.Pending())
+                if (server.Available > 0)
+                {
+                    buffer = server.Receive(ref ipep);
+                }
+
+                if (pendingClients.Count() > 0)
                 {
                     client = server.AcceptTcpClient();
                     this.Dispatcher.Invoke(log, (object)("Client accepted: " + client.Client.LocalEndPoint.ToString()));
@@ -146,7 +154,7 @@ namespace PUS2
                     read = fin.Read(buf, totalRead, 1024);
                     ret += encoding.GetString(buf);
                     totalRead += read;
-                } while (read < 1024);
+                } while (read == 1024);
             }
             else
             {
@@ -181,9 +189,9 @@ namespace PUS2
 
             try
             {
-                client = new TcpClient(RemoteHostAddress.Text, queryPort);
+                client = new UdpClient(RemoteHostAddress.Text, queryPort);
             }
-            catch (SocketException exep)
+            catch (SocketException exep)//penis.
             {
                 Log("Unable to connect with " + RemoteHostAddress.Text);
                 Log("[Exception] " + exep.Message);
@@ -192,21 +200,22 @@ namespace PUS2
 
             Log("Connected to server: " + RemoteHostAddress.Text);
 
-            NetworkStream stream = client.GetStream();
-
             Log("Sending query: " + QueryBox.Text);
-            stream.Write(encoding.GetBytes(QueryBox.Text), 0, QueryBox.Text.Length);
+            client.Send(encoding.GetBytes(QueryBox.Text), QueryBox.Text.Length);
 
             Log("Awaiting response...");
+            server = new UdpClient(dataPort, AddressFamily.InterNetwork);
             byte[] buffer = new byte[bufferSize];
+            IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(RemoteHostAddress.Text), dataPort);
             do
             {
-                int trans = stream.Read(buffer, 0, bufferSize);
-                Output.AppendText(encoding.GetString(buffer, 0, trans));
-            } while (stream.DataAvailable);
+                buffer = server.Receive(ref ipep);
+                Output.AppendText(encoding.GetString(buffer, 0, buffer.Count()));
+            } while (buffer.Count() != 512);
             Output.ScrollToEnd();
 
-            stream.Close();
+            server.Close();
+            server = null;
 
             client.Close();
             client = null;
