@@ -47,7 +47,12 @@ namespace RemoteClass
                 {
                     path = serverRoot;
                 }
-
+                //else if ((query.Equals("\\") || query.Equals("/") || query.Equals("") || query.Equals(".")))
+                //{
+                //     serverRoot= path;
+                //     ret += "\r\nKatalog serwera zmieniony na: " + path + "\r\n";
+                //     return encoding.GetBytes(ret);
+                //} 
                 string[] dirs = Directory.GetDirectories(path);
                 foreach (string dir in dirs)
                 {
@@ -59,8 +64,6 @@ namespace RemoteClass
                     ret += file + "\r\n";
                 }
             }
-            
-
             return encoding.GetBytes(ret);
         }
 

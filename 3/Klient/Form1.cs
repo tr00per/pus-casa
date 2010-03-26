@@ -30,9 +30,9 @@ namespace Klient
                 kanal = new HttpClientChannel();
                 ChannelServices.RegisterChannel(kanal, false);
                 RemoteObject obiekt = (RemoteObject)Activator.GetObject(typeof(RemoteObject), adres + ":" + port.ToString() + "/NazwaUslugiIObiektu");
-                textBox3.AppendText(obiekt.getFile(textBox2.Text));
+                textBox3.AppendText("\r\n\r\n==================\r\n"+obiekt.getFile(textBox2.Text)+"\r\n==================");
                 ChannelServices.UnregisterChannel(kanal);
-                textBox3.AppendText("polaczenie zostalo zakonczone");
+                textBox3.AppendText("\r\nPołączenie zostało zakończone\r\n");
             }
             catch (Exception ex)
             {
