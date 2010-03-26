@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebService", "WebService\", "{F432359F-1363-4408-861C-1F8497FD42B5}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFramework = "3.5"
+		Debug.AspNetCompiler.VirtualPath = "/WebService"
+		Debug.AspNetCompiler.PhysicalPath = "WebService\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\WebService\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/WebService"
+		Release.AspNetCompiler.PhysicalPath = "WebService\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\WebService\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "53419"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klient", "klient\klient.csproj", "{EAD651A7-A939-46CE-8C98-84810A143FD2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F432359F-1363-4408-861C-1F8497FD42B5} = {F432359F-1363-4408-861C-1F8497FD42B5}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F432359F-1363-4408-861C-1F8497FD42B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F432359F-1363-4408-861C-1F8497FD42B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F432359F-1363-4408-861C-1F8497FD42B5}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{F432359F-1363-4408-861C-1F8497FD42B5}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{EAD651A7-A939-46CE-8C98-84810A143FD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAD651A7-A939-46CE-8C98-84810A143FD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAD651A7-A939-46CE-8C98-84810A143FD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAD651A7-A939-46CE-8C98-84810A143FD2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+	EndGlobalSection
+EndGlobal
