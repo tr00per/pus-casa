@@ -45,6 +45,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(257, 20);
             this.textBox1.TabIndex = 0;
+            this.textBox1.Text = "127.0.0.1";
             // 
             // numericUpDown1
             // 
@@ -116,11 +117,13 @@
             // textBox3
             // 
             this.textBox3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.textBox3.Location = new System.Drawing.Point(0, 101);
+            this.textBox3.Location = new System.Drawing.Point(0, 96);
             this.textBox3.Multiline = true;
             this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(599, 398);
+            this.textBox3.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBox3.Size = new System.Drawing.Size(599, 403);
             this.textBox3.TabIndex = 8;
+            this.textBox3.WordWrap = false;
             // 
             // Form1
             // 
@@ -135,7 +138,9 @@
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.textBox1);
+            this.Location = new System.Drawing.Point(630, 30);
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
