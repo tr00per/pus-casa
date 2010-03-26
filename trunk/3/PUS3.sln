@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteClass", "RemoteClass\RemoteClass.csproj", "{72C0AF96-7D09-40D2-9556-5227BBD173B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{D5629346-524F-489F-A92C-2B48AD6D7C28}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Klient", "Klient\Klient.csproj", "{655A1A0A-D2D1-40AC-9FF1-E86663F14BD4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{72C0AF96-7D09-40D2-9556-5227BBD173B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72C0AF96-7D09-40D2-9556-5227BBD173B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72C0AF96-7D09-40D2-9556-5227BBD173B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72C0AF96-7D09-40D2-9556-5227BBD173B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5629346-524F-489F-A92C-2B48AD6D7C28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5629346-524F-489F-A92C-2B48AD6D7C28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5629346-524F-489F-A92C-2B48AD6D7C28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5629346-524F-489F-A92C-2B48AD6D7C28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{655A1A0A-D2D1-40AC-9FF1-E86663F14BD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{655A1A0A-D2D1-40AC-9FF1-E86663F14BD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{655A1A0A-D2D1-40AC-9FF1-E86663F14BD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{655A1A0A-D2D1-40AC-9FF1-E86663F14BD4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+	EndGlobalSection
+EndGlobal
