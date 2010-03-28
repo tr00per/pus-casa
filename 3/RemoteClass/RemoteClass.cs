@@ -16,15 +16,9 @@ namespace RemoteClass
             serverRoot = Directory.GetCurrentDirectory();
         }
 
-        public string getFile(string tekst)
+        public string getFile(string query)
         {
-            this.InitializeLifetimeService();
-            return GatherOutputData(tekst);
 
-        }
-
-        private string GatherOutputData(string query)
-        {
             byte[] buf = new byte[1024];
             string ret = "";
             string path = serverRoot + query;
