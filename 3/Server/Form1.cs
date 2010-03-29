@@ -11,6 +11,7 @@ using RemoteClass;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Http;
+using System.Runtime.Remoting.Channels.Tcp;
 
 
 namespace Server
@@ -26,7 +27,8 @@ namespace Server
         {
             try
             {
-                HttpServerChannel kanal = new HttpServerChannel((int)numericUpDown1.Value);
+               // HttpServerChannel kanal = new HttpServerChannel((int)numericUpDown1.Value);
+                TcpServerChannel kanal = new TcpServerChannel((int)numericUpDown1.Value);
                 ChannelServices.RegisterChannel(kanal, false);
                 
                 RemotingConfiguration.RegisterWellKnownServiceType(typeof(RemoteObject), "NazwaUslugiIObiektu", WellKnownObjectMode.Singleton);
