@@ -36,7 +36,7 @@ namespace klient
                 // Common request fields (optional)
                 request.Version = "2.0";
                 request.Market = "pl-pl";
-                request.Adult = AdultOption.Moderate;
+                request.Adult = AdultOption.Off;
                 request.AdultSpecified = true;
                 request.Options = new SearchOption[]
         {
@@ -45,58 +45,45 @@ namespace klient
 
                 // Web-specific request fields (optional)
                 request.Web = new WebRequest();
-                request.Web.Count = 10;
+                request.Web.Count = 15;
                 request.Web.CountSpecified = true;
                 request.Web.Offset = 0;
-                request.Web.OffsetSpecified = true;
+                request.Web.OffsetSpecified = false;
                 request.Web.Options = new WebSearchOption[]
         {
             WebSearchOption.DisableHostCollapsing,
             WebSearchOption.DisableQueryAlterations
         };
                 string strona = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"></head><body>";
-        //        webBrowser1.DocumentText =
-        //"<html><body>Please enter your name:<br/>" +
-        //"<input type='text' name='userName'/><br/>" +
-        //"<a href='http://www.microsoft.com'>continue</a>" +
-        //"</body></html>";
 
                 SearchResponse response = service.Search(request);
 
-                // Display the results header.
-            //    webBrowser1.DocumentText = "<html><body>";
-                strona+="<p align=\"right\">Bing API Version " + response.Version.ToString();
-                strona+="<br>" + "Web results for \"" + response.Query.SearchTerms;
-                strona+="\"   Displaying "+(response.Web.Offset + 1)+" to "+(response.Web.Offset + response.Web.Results.Length)+" of "+response.Web.Total+" results";
-                strona+="<p>";
-                
+                strona += "<p align=\"right\">Bing API Version " + response.Version.ToString();
+                strona += "<br>" + "Web results for \"" + response.Query.SearchTerms;
+                strona += "\"   Displaying " + (response.Web.Offset + 1) + " to " + (response.Web.Offset + response.Web.Results.Length) + " of " + response.Web.Total + " results";
+                strona += "<p>";
+
                 // Display the Web results.
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
 
                 foreach (WebResult result in response.Web.Results)
                 {
-                    builder.Length = 0;
-                    builder.Append(result.Title.ToString() + "<br>");
-                    builder.Append(result.Description.ToString() + "<br>");
-                    builder.Append(result.Url + "<br>");
-                    builder.Append("Last Crawled: ");
-                    builder.Append(result.DateTime);
-               //     strona += builder.ToString();
-
-                    strona += "<a href=\"" + result.Url+ "\">" + result.Title + "</a><br>";
+                    strona += "<a href=\"" + result.Url + "\">" + result.Title + "</a><br>";
                     strona += result.Description + "<br>";
                     strona += result.Url + "<br>";
                     strona += "Last Crawled: ";
-                    strona += result.DateTime+ "<br><br>";
-                    
+                    strona += result.DateTime + "<br><br>";
+
                 }
-                strona += "</body></html>";
+                strona += "</p></body></html>";
                 webBrowser1.DocumentText = strona;
-                
+
 
 
             }
-            catch (Exception n) { }
+            catch (Exception n)
+            {
+                MessageBox.Show(n.Message, "blad");
+            }
 
         }
     }
